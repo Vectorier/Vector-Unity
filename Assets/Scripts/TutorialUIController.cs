@@ -1,3 +1,4 @@
+using System;
 using DG.Tweening;
 using Nekki.Vector.Core.Controllers;
 using UnityEngine;
@@ -5,20 +6,14 @@ using UnityEngine.UI;
 
 public class TutorialUIController : MonoBehaviour
 {
-    [SerializeField]
-    private Text _text;
+    
+    [SerializeField] TutorialKeyboard _keyboard;
+    
+    [SerializeField] TutorialGamepad _gamepad;
 
-    [SerializeField]
-    private RectTransform _hand;
+    [SerializeField] private GameObject _GB;
 
-    [SerializeField]
-    private Image _track;
-
-    [SerializeField]
-    private GameObject _GB;
-
-    [SerializeField]
-    private GameObject _root;
+    [SerializeField] private GameObject _root;
 
     private Vector2 _defaultHandPosition;
 
@@ -26,10 +21,14 @@ public class TutorialUIController : MonoBehaviour
 
     private void Awake()
     {
-        if (_hand != null)
-        {
-            _defaultHandPosition = _hand.anchoredPosition;
-        }
+        // GamepadController.Instance.OnGamepadConnected += () =>
+        // {
+        //     _keyboard.gameObject.SetActive(false);
+        // };
+        // GamepadController.Instance.OnGamepadDisconnected += () =>
+        // {
+        //     _keyboard.gameObject.SetActive(true);
+        // };
     }
 
     public void SetVisible(bool value)
@@ -37,73 +36,27 @@ public class TutorialUIController : MonoBehaviour
         if (_root != null)
         {
             _root.SetActive(value);
-            if (_GB != null)
-            {
-                _GB.SetActive(value);
-            }
+        }
+
+        if (_GB != null)
+        {
+            _GB.SetActive(value);
         }
     }
 
     public void ShowKey(KeyVariables key, string description)
     {
-        if (_hand != null)
+        if (!GamepadController.Instance.IsGamepadConnected)
         {
-            _hand.anchoredPosition = _defaultHandPosition;
-            _track.color = Color.white;
-
-            if (key != null)
-            {
-                switch (key.Key)
-                {
-                    case Key.Up:
-                        string upText = LocalizationManager.Instance.GetTranslation("help_up_txt");
-                        string upDesc = GetDescription(description);
-
-                        _track.transform.localEulerAngles = new Vector3(0, 0, 0);
-
-                        _text.text = upDesc;
-
-                        break;
-                    case Key.Down:
-
-                        string downText = LocalizationManager.Instance.GetTranslation("help_down_txt");
-                        string downDesc = GetDescription(description);
-
-                        _track.transform.localEulerAngles = new Vector3(0, 0, 180);
-
-                        _text.text = downDesc;
-
-                        break;
-                    case Key.Left:
-                        string leftText = LocalizationManager.Instance.GetTranslation("help_left_txt");
-                        string leftDesc = GetDescription(description);
-
-                        _track.transform.localEulerAngles = new Vector3(0, 0, 90);
-
-                        _text.text = leftDesc;
-
-                        break;
-                    case Key.Right:
-                        string rightText = LocalizationManager.Instance.GetTranslation("help_right_txt");
-                        string rightDesc = GetDescription(description);
-
-                        _track.transform.localEulerAngles = new Vector3(0, 0, -90);
-
-                        _text.text = rightDesc;
-
-                        break;
-                }
-                //_sequence = DOTween.Sequence();
-                //TweenSettingsExtensions.AppendInterval(_sequence, 0.2f);
-                //var t = DOTweenModuleUI.DOAnchorPos(_hand, endValue, 0.5f);
-                //TweenSettingsExtensions.Append(_sequence, t);
-                //var t1 = DOTweenModuleUI.DOFade(_track, 0, 0.5f);
-                //TweenSettingsExtensions.Join(_sequence, t1);
-                //TweenSettingsExtensions.AppendInterval(_sequence, 0.8f);
-                //TweenSettingsExtensions.SetLoops(_sequence, -1);
-                //TweenExtensions.Play(_sequence);
-                SetVisible(true);
-            }
+            _gamepad.gameObject.SetActive(false);
+            _keyboard.gameObject.SetActive(true);
+            _keyboard.Show(key.Key, GetDescription(description));
+        }
+        else
+        {
+            _keyboard.gameObject.SetActive(false);
+            _gamepad.gameObject.SetActive(true);
+            _gamepad.Show(key.Key, GetDescription(description));
         }
     }
 

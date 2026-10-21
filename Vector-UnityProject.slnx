@@ -18,6 +18,7 @@
   <Project Path="Unity.InputSystem.csproj" />
   <Project Path="Unity.Purchasing.Stores.csproj" />
   <Project Path="Unity.Notifications.Android.csproj" />
+  <Project Path="Unity.Searcher.Editor.csproj" />
   <Project Path="Unity.ResourceManager.csproj" />
   <Project Path="Unity.AI.Navigation.Editor.ConversionSystem.csproj" />
   <Project Path="Unity.Services.Core.Editor.csproj" />

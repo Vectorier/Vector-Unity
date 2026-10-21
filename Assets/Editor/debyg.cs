@@ -5,11 +5,6 @@ using UnityEngine;
 
 public class debyg : MonoBehaviour
 {
-    [MenuItem("Debug/Refresh current screen")]
-    public static void Refresh()
-    {
-        Game.Instance.ScreenManager.Refresh();
-    }
     
     [MenuItem("Debug/Test")]
     public static void Test()
@@ -47,15 +42,15 @@ public class debyg : MonoBehaviour
 
         }
 
-        foreach (var trick in StoreManager.Instance.GetItems(StoreItemType.Tricks))
-        {
-            UserDataManager.Instance.ShopData.Add(trick.Id, 1);
-        }
-
-        foreach (var trick in StoreManager.Instance.GetItems(StoreItemType.Gear))
-        {
-            UserDataManager.Instance.ShopData.Add(trick.Id, 1);
-        }
+        // foreach (var trick in StoreManager.Instance.GetItems(StoreItemType.Tricks))
+        // {
+        //     UserDataManager.Instance.ShopData.Add(trick.Id, 1);
+        // }
+        //
+        // foreach (var trick in StoreManager.Instance.GetItems(StoreItemType.Gear))
+        // {
+        //     UserDataManager.Instance.ShopData.Add(trick.Id, 1);
+        // }
     }
 
     [MenuItem("Debug/Reload")]

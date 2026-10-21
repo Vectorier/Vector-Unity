@@ -109,6 +109,24 @@ public class Options : BaseUserHolder<Options>
         Update();
     }
 
+    public void SetMusic(bool value)
+    {
+        Music = value;
+        MusicLevel = Music ? LastUsedSetMusicValue : 0;
+        SoundsManager.Instance.SetMusicPause(!Music);
+        ToggleMusicEvent?.Invoke(MusicLevel);
+        Update();
+    }
+    
+    public void SetSound(bool value)
+    {
+        Sound = value;
+        SoundLevel = Sound ? LastUsedSetSoundValue : 0;
+        SoundsManager.Instance.SetSoundsPause(!Sound);
+        ToggleSoundEvent?.Invoke(SoundLevel);
+        Update();
+    }
+
     public void ToggleSound()
     {
         SoundLevel = Sound ? 0 : LastUsedSetSoundValue;

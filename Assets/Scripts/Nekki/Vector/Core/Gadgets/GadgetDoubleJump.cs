@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nekki.Vector.GUI.Scenes.Main;
+using Nekki.Vector.GUI.Scenes.Main.Screens;
 using UI;
 using UnityEngine;
 
@@ -32,7 +34,7 @@ namespace Nekki.Vector.Core.Gadgets
         {
             base.Play();
             _userModel.PlayAnimation(_doubleJump);
-            GameplayView.Current.GadgetCooldownIcon.fillAmount = 1;
+            MainScene.Current.GetScreen<GameplayScreen>().SetGadgetCooldownProgress(1);
             CurrentCooldown = Cooldown;
             Stop();
         }
@@ -52,7 +54,7 @@ namespace Nekki.Vector.Core.Gadgets
                     CurrentCooldown -= Time.deltaTime;
 
                     float progress = Mathf.Clamp01(CurrentCooldown / Cooldown);
-                    GameplayView.Current.GadgetCooldownIcon.fillAmount = progress;
+                    MainScene.Current.GetScreen<GameplayScreen>().SetGadgetCooldownProgress(progress);
                 }
                 yield return null;
             }

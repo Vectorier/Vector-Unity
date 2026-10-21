@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using Nekki.Vector.GUI.Scenes.Main;
+using Nekki.Vector.GUI.Scenes.Main.Dialogs;
 using UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -10,13 +12,13 @@ public class Game
 
     private const string PaidApplicationIDIOS = "com.nekki.vector.iphone";
 
+    public static bool Loaded = false;
+    
     private static Game _instance;
 
     private bool _isInited;
 
     private bool _needShowRefreshApplication;
-
-    public ScreenManager ScreenManager;
 
     public class SnailSettings
     {
@@ -75,32 +77,6 @@ public class Game
         return UserDataManager.RuntimeInfo.IsHunterMode;
     }
 
-    public IEnumerator Start()
-    {
-        ScreenManager = new ScreenManager();
-
-        yield return new WaitForEndOfFrame();
-
-        var payload = new VideoScreenPayloadData("intro.mp4", () =>
-        {
-            ScreenManager.Show<LobbyScreen>(true, false);
-            SoundsManager.Instance.PlayBackground(MusicType.menu);
-            _isInited = true;
-            if (_needShowRefreshApplication)
-            {
-                ShowRefreshApplication();
-            }
-        });
-        ScreenManager.Show<VideoScreen, VideoScreenPayloadData>(payload, true, false);
-        BackButtonManager.Instance.OnBackButton += OnBackButton;
-
-    }
-
-    private void OnBackButton()
-    {
-        ScreenManager.Back();
-    }
-
     public void ShowRefreshApplication()
     {
         if (_isInited)
@@ -118,7 +94,6 @@ public class Game
 
     private void ShowRefreshApplication(Action onPlay)
     {
-        ScreenManager.ClosePopup();
         var title = LocalizationManager.Instance.GetTranslation("terms_of_use_title");
         var message = LocalizationManager.Instance.GetTranslation("buy_premium_desc");
         var ok = LocalizationManager.Instance.GetTranslation("ctrl_ok");
@@ -128,7 +103,6 @@ public class Game
                 onPlay.Invoke();
         });
 
-        var payload = new AlertPayloadData(title, message, ok, "", onClick);
-        ScreenManager.Popup<AlertPopup, AlertPayloadData>(payload);
+        MainScene.Current.GetDialog<AlertDialog>().Show(title, message, ok, null, onClick);
     }
 }

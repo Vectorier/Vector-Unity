@@ -140,22 +140,22 @@ namespace Nekki.Vector.Core.Location
 
         public void ExpandTrickAreaOnce(int sign)
         {
-            if (!_wasExpanded)
-            {
-                if (sign < 0)
-                {
-                    _Point2.X += _originalWidth;
-                    _Point3.X += _originalWidth;
-                }
-                else
-                {
-                    _Point1.X -= _originalWidth;
-                    _Point4.X -= _originalWidth;
-                }
+            //if (!_wasExpanded)
+            //{
+            //    if (sign < 0)
+            //    {
+            //        _Point2.X += _originalWidth;
+            //        _Point3.X += _originalWidth;
+            //    }
+            //    else
+            //    {
+            //        _Point1.X -= _originalWidth;
+            //        _Point4.X -= _originalWidth;
+            //    }
 
-                _rectangle.Set((float)_Point1.X, (float)_Point1.Y, (float)(_Point2.X - _Point1.X), (float)(_Point4.Y - _Point1.Y));
-                _wasExpanded = true;
-            }
+            //    _rectangle.Set((float)_Point1.X, (float)_Point1.Y, (float)(_Point2.X - _Point1.X), (float)(_Point4.Y - _Point1.Y));
+            //    _wasExpanded = true;
+            //}
         }
     }
 }

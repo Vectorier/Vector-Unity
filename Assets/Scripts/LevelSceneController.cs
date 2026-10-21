@@ -3,6 +3,8 @@ using Nekki.Vector.Core.Location;
 using Nekki.Vector.Core.Trigger.Actions;
 using Nekki.Vector.GUI.InputControllers;
 using System.ComponentModel;
+using Nekki.Vector.GUI.Scenes.Main;
+using Nekki.Vector.GUI.Scenes.Main.Screens;
 using UI;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -17,6 +19,9 @@ public class LevelSceneController : MonoBehaviour
     public const float Z_DEBUG = -10f;
 
     public const float Z_PLAYER = -15f;
+
+    [SerializeField]
+    bool _renderInterpolation = true;
 
     [SerializeField]
     private KeyboardController _keyboardController;
@@ -45,21 +50,22 @@ public class LevelSceneController : MonoBehaviour
 
     private PlayerInputActions actions;
 
-    private readonly GameplayClock _gameplayClock = new GameplayClock();
+    private GameplayClock _gameplayClock = new GameplayClock();
 
     private void Awake()
     {
+        _gameplayClock = new GameplayClock();
         FixedRenderInterpolation.Clear();
         _debugMenu.Init();
         HideTutorialUIController();
         // _keyboardController.OnKeyDown.AddListener(OnKeyDown);
-        _touchController.OnSlide += OnSlide;
-        
         actions =  new PlayerInputActions();
     }
 
     private void OnEnable()
     {
+        Load();
+        _touchController.OnSlide += OnSlide;
         Camera.onPreCull += BeginCameraRender;
         Camera.onPostRender += EndCameraRender;
         RenderPipelineManager.beginCameraRendering += BeginPipelineCameraRender;
@@ -85,6 +91,16 @@ public class LevelSceneController : MonoBehaviour
         FixedRenderInterpolation.AlphaProvider = null;
         _gameplayClock.Reset();
         actions.Disable();
+        
+        FixedRenderInterpolation.Clear();
+        // _keyboardController.OnKeyDown.RemoveListener(OnKeyDown);
+        _touchController.OnSlide -= OnSlide;
+        RunnerRender.Reset();
+        if (LevelMainController.current != null)
+        {
+            LevelMainController.current.ClearScene();
+        }
+        LevelMainController.Clear();
     }
 
     private void OnDestroy()
@@ -116,7 +132,7 @@ public class LevelSceneController : MonoBehaviour
         LevelMainController.current.HandleNewInput(new KeyVariables(key));
     }
 
-    private void Start()
+    private void Load()
     {
         LevelMainController.Init(this);
         _botIcon.Init(LevelMainController.current.Location.GetAllBotModels());
@@ -144,9 +160,15 @@ public class LevelSceneController : MonoBehaviour
             LevelMainController.current.slowModeFrames, Time.fixedDeltaTime);
         for (int i = 0; i < ticks; i++)
         {
-            FixedRenderInterpolation.BeginTick();
+            if (_renderInterpolation)
+            {
+                FixedRenderInterpolation.BeginTick();
+            }
             LevelMainController.current.Render();
-            FixedRenderInterpolation.EndTick();
+            if (_renderInterpolation)
+            {
+                FixedRenderInterpolation.EndTick();
+            }
             if (!CanInterpolate() || LevelMainController.current.slowModeFrames == 0f)
                 break;
         }
@@ -192,7 +214,7 @@ public class LevelSceneController : MonoBehaviour
         {
             return;
         }
-        _tutorialUIController.SetVisible(value);
+        // _tutorialUIController.SetVisible(value);
     }
 
     public void ShowActivatedTrick(TrickAreaRunner current)
@@ -221,7 +243,8 @@ public class LevelSceneController : MonoBehaviour
         {
             return;
         }
-        Game.Instance.ScreenManager.Show<GameplayPauseScreen>(false, false);
+        MainScene.Current.GetScreen<Wallet>().Activate();
+        MainScene.Current.SwitchScreen<GameplayPauseScreen>(false);
         LevelMainController.current.pauseRender = true;
     }
 }

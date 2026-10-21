@@ -1,8 +1,23 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class ScrollSnapItem : MonoBehaviour
+public class ScrollSnapItem : MonoBehaviour, ILayoutController
 {
+	// Layout can move a card while the content bounds stay unchanged. Notify the
+	// scroller during that layout pass instead of polling every card while idle.
+	internal ScrollSnap LayoutOwner;
+
+	public void SetLayoutHorizontal() => NotifyLayoutChanged();
+	public void SetLayoutVertical() => NotifyLayoutChanged();
+	private void OnRectTransformDimensionsChange() => NotifyLayoutChanged();
+	private void OnDidApplyAnimationProperties() => NotifyLayoutChanged();
+
+	private void NotifyLayoutChanged()
+	{
+		if (LayoutOwner != null)
+			LayoutOwner.InvalidateGeometry();
+	}
+
 	public RectTransform Content;
 
 	public Text SelectionText;

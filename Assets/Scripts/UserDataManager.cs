@@ -70,7 +70,6 @@ public class UserDataManager : AbstractManager<UserDataManager>
         if (newLocale == null)
         {
             newLocale = LocalizationManager.Instance.GetSystem();
-            Debug.Log(newLocale);
         }
 
         LocalizationManager.Instance.ChangeLocale(newLocale);

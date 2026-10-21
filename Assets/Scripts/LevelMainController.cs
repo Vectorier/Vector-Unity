@@ -9,6 +9,9 @@ using Nekki.Vector.Core.Controllers;
 using Nekki.Vector.Core.Gadgets;
 using Nekki.Vector.Core.Location;
 using Nekki.Vector.Core.Models;
+using Nekki.Vector.GUI.Scenes.Main;
+using Nekki.Vector.GUI.Scenes.Main.Dialogs;
+using Nekki.Vector.GUI.Scenes.Main.Screens;
 using UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -55,17 +58,9 @@ public class LevelMainController
 
     private const float AFK_DELAY = 10f;
 
-    public static LevelMainController current
-    {
-        get;
-        private set;
-    }
+    public static LevelMainController current { get; private set; }
 
-    public LevelSceneController levelSceneController
-    {
-        get;
-        private set;
-    }
+    public LevelSceneController levelSceneController { get; private set; }
 
     public Location Location => _Location;
 
@@ -81,8 +76,10 @@ public class LevelMainController
                 {
                     continue;
                 }
+
                 return model;
             }
+
             return null;
         }
     }
@@ -96,6 +93,7 @@ public class LevelMainController
             {
                 num = 1;
             }
+
             slowModeFrames = num;
         }
     }
@@ -132,31 +130,17 @@ public class LevelMainController
 
     public uint FrameCount => _FrameCount;
 
-    public bool CanPauseOrReload
-    {
-        get;
-        private set;
-    }
+    public bool CanPauseOrReload { get; private set; }
 
-    public bool IsDeath
-    {
-        get;
-        private set;
-    }
+    public bool IsDeath { get; private set; }
 
-    public bool IsWin
-    {
-        get;
-        private set;
-    }
+    public bool IsWin { get; private set; }
 
-    public int SkipPlayerFrames
-    {
-        get;
-        set;
-    }
+    public int SkipPlayerFrames { get; set; }
 
     public ControllerGadgets controllerGadgets => _controllerGadgets;
+
+    public GameObject LevelObject { get; set; }
 
     public static void Init(LevelSceneController levelSceneController)
     {
@@ -220,9 +204,12 @@ public class LevelMainController
         var coinrunners = Location.GetAllCoins();
         CoinSetter.SetCoins(coinrunners, Location.Sets.TotalCoins);
         CoinsSystem.CurrentType = CoinsSystemType.CST_DEFAULT;
-        var settings = LocationManager.Instance.coinsSystem.GetCoinsSettings(CoinsSystem.CurrentType, CoinType.CT_DEFAULT);
-        var settings1 = LocationManager.Instance.coinsSystem.GetCoinsSettings(CoinsSystem.CurrentType, CoinType.CT_BRONZE);
-        var settings2 = LocationManager.Instance.coinsSystem.GetCoinsSettings(CoinsSystem.CurrentType, CoinType.CT_GOLD);
+        var settings =
+            LocationManager.Instance.coinsSystem.GetCoinsSettings(CoinsSystem.CurrentType, CoinType.CT_DEFAULT);
+        var settings1 =
+            LocationManager.Instance.coinsSystem.GetCoinsSettings(CoinsSystem.CurrentType, CoinType.CT_BRONZE);
+        var settings2 =
+            LocationManager.Instance.coinsSystem.GetCoinsSettings(CoinsSystem.CurrentType, CoinType.CT_GOLD);
 
         List<CoinRunner> activeCoins = new List<CoinRunner>(coinrunners);
         foreach (var coinRunner in coinrunners)
@@ -326,12 +313,15 @@ public class LevelMainController
 
     public bool HasCurrentLocationEverBeenCompleted()
     {
-        var info = UserDataManager.Instance.CurrentBalanceLocation.CurrentStoryModeStoryInfos[UserDataManager.RuntimeInfo.CurrentStory];
+        var info =
+            UserDataManager.Instance.CurrentBalanceLocation.CurrentStoryModeStoryInfos[
+                UserDataManager.RuntimeInfo.CurrentStory];
         var stats = UserDataManager.Instance.GameStats.GetTrackStats(info.Name);
         if (stats != null)
         {
             return stats.Stars > 0;
         }
+
         return false;
     }
 
@@ -378,6 +368,7 @@ public class LevelMainController
         {
             return;
         }
+
         modelHuman.IsGadget = false;
         IsWin = true;
         CanPauseOrReload = false;
@@ -393,25 +384,34 @@ public class LevelMainController
                 Reload();
                 return;
             }
-            GoToWinScene();
+
+            CoroutineRunner.Instance.Run(GoToWinScene());
         });
         s.Play();
     }
 
-    public void GoToWinScene()
+    public IEnumerator GoToWinScene()
     {
-        ClearScene();
-        var storyInfo = UserDataManager.Instance.CurrentBalanceLocation.CurrentStoryModeStoryInfos[UserDataManager.RuntimeInfo.CurrentStory];
-        if (storyInfo.CutsceneEnd != null)
+        var storyInfo =
+            UserDataManager.Instance.CurrentBalanceLocation.CurrentStoryModeStoryInfos[
+                UserDataManager.RuntimeInfo.CurrentStory];
+
+        MainScene.Current.ModuleSwitcher.Switch(() =>
         {
-            var data = new VideoScreenPayloadData(storyInfo.CutsceneEnd, () =>
-            {
-                Game.Instance.ScreenManager.Show<PostGameplayWinScreen>(true, false);
-            });
-            Game.Instance.ScreenManager.Show<VideoScreen, VideoScreenPayloadData>(data, true, false);
-            return;
+            MainScene.Current.GetScreen<Wallet>().Activate();
+            
+            MainScene.Current.SwitchScreen<PostGameplayScreen>(false);
+
+            MainScene.Current.RunController.gameObject.SetActive(false);
+        });
+
+
+        if (!string.IsNullOrEmpty(storyInfo.CutsceneEnd))
+        {
+            yield return null;
+
+            yield return MainScene.Current.GetDialog<VideoDialog>().Show(storyInfo.CutsceneEnd);
         }
-        Game.Instance.ScreenManager.Show<PostGameplayWinScreen>(true, false);
     }
 
     public void Murder(ModelHuman modelHuman)
@@ -492,13 +492,15 @@ public class LevelMainController
 
     public void ClearScene()
     {
-
-        Object.Destroy(GameObject.Find("Level_root_object"));
+        if (LevelObject != null)
+        {
+            Object.Destroy(LevelObject);
+        }
 
         ResourceManager.ClearTextureCache();
         AtlasDecoder.ClearCache();
 
-        SceneManager.UnloadSceneAsync("Level");
+        // SceneManager.UnloadSceneAsync("Level");
 
         Resources.UnloadUnusedAssets();
         GC.Collect();
@@ -533,9 +535,10 @@ public class LevelMainController
             _consecutiveLosses = 0;
             if (!Game.Instance.Snail)
             {
-                Game.Instance.ScreenManager.Show<GameplayPauseScreen>(false, false);
-
+                MainScene.Current.GetScreen<Wallet>().Activate();
+                MainScene.Current.SwitchScreen<GameplayPauseScreen>(false);
             }
+
             pauseRender = true;
         }
     }
@@ -549,6 +552,7 @@ public class LevelMainController
             if (model != null)
                 list.Add(model);
         }
+
         return list;
     }
 
@@ -569,7 +573,9 @@ public class LevelMainController
             _inputBeen = false;
             return;
         }
-        Game.Instance.ScreenManager.Show<GameplayPauseScreen>(false, false);
+
+        MainScene.Current.GetScreen<Wallet>().Activate();
+        MainScene.Current.SwitchScreen<GameplayPauseScreen>(false);
         pauseRender = true;
     }
 

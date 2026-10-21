@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Nekki.Vector.GUI.Scenes.Main;
+using Nekki.Vector.GUI.Scenes.Main.Screens;
 using UI;
 using UnityEngine;
 
@@ -65,7 +67,7 @@ namespace Nekki.Vector.Core.Gadgets
                     time -= Time.deltaTime;
 
                     float progress = Mathf.Clamp01(1f - (time / Duration));
-                    GameplayView.Current.GadgetCooldownIcon.fillAmount = progress;
+                    MainScene.Current.GetScreen<GameplayScreen>().SetGadgetCooldownProgress(progress);
                 }
 
                 yield return null;
@@ -88,7 +90,7 @@ namespace Nekki.Vector.Core.Gadgets
                     CurrentCooldown -= Time.deltaTime;
 
                     float progress = Mathf.Clamp01(CurrentCooldown / Cooldown);
-                    GameplayView.Current.GadgetCooldownIcon.fillAmount = progress;
+                    MainScene.Current.GetScreen<GameplayScreen>().SetGadgetCooldownProgress(progress);
                 }
                 yield return null;
             }

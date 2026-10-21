@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
@@ -14,6 +15,14 @@ public class LocalizationText : MonoBehaviour
     private void Awake()
     {
         _text = GetComponent<Text>();
+        
+        ReadText();
+        OnLocaleUpdated(true);
+        LocalizationManager.Instance.UpdateEvent += OnLocaleUpdated;
+    }
+
+    private void ReadText()
+    {
         if (_text != null)
         {
             var builder = new StringBuilder();
@@ -45,8 +54,6 @@ public class LocalizationText : MonoBehaviour
         }
         var builder1 = new StringBuilder(_text.text);
         _origText = builder1;
-        OnLocaleUpdated(true);
-        LocalizationManager.Instance.UpdateEvent += OnLocaleUpdated;
     }
 
     private void OnDestroy()
@@ -81,5 +88,12 @@ public class LocalizationText : MonoBehaviour
     protected virtual void SetText(StringBuilder value)
     {
         _text.text = value.ToString();
+    }
+
+    public void SetText(string text)
+    {
+        _text.text = text;
+        ReadText();
+        OnLocaleUpdated(true);
     }
 }

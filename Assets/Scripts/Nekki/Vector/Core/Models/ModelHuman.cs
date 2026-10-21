@@ -267,6 +267,7 @@ namespace Nekki.Vector.Core.Models
             }
         }
 
+
         public override void OnCollisionPlatform(ModelEvent<Collision> @event)
         {
 

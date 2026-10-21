@@ -4,6 +4,7 @@ using System.Linq;
 using System.Xml;
 using Core._Common;
 using Nekki.Vector.Core.Location.LevelCreation;
+using Nekki.Vector.Core.Location.Serialized;
 using Nekki.Vector.Core.Visual;
 using UnityEngine;
 using Xml2Prefab;
@@ -48,6 +49,7 @@ namespace Nekki.Vector.Core.Location
             }
             LoadBuilds();
             LoadObjects();
+            Parse();
         }
 
         private void LoadBuilds()
@@ -83,7 +85,6 @@ namespace Nekki.Vector.Core.Location
                 }
                 _XmlObjects.Add(root["Objects"]);
             }
-            Parse();
         }
 
         private void Parse()
@@ -153,6 +154,7 @@ namespace Nekki.Vector.Core.Location
             XmlNode root = _document["Root"]["Track"];
             List<float> factors = new List<float>();
             GameObject levelObject = new GameObject("Level_root_object");
+            LevelMainController.current.LevelObject = levelObject;
             levelObject.transform.position = Vector3.zero;
             levelObject.transform.localScale = Vector3.one;
             foreach (XmlNode xmlNode in root)

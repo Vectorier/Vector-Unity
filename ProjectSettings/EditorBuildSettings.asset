@@ -7,13 +7,13 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/Scenes/Preloader.unity
-    guid: 6c5645a3b9466cc48a793a955f7d589e
+    guid: 35ea790744c6e1d43af72b7da36cc65a
   - enabled: 1
-    path: Assets/Scenes/UI.unity
-    guid: 4d785a7a16b463a4593e8c546dfb7d5e
+    path: Assets/Scenes/Main.unity
+    guid: c6be53457d6c226448484d37a45c4f49
   - enabled: 1
-    path: Assets/Scenes/Level.unity
-    guid: d58d0a13c9306974bb5e8b5f7ab1166b
+    path: Assets/Scenes/SnailRunner.unity
+    guid: 07278f9222c37314fb5fb86639292b3f
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: fe1b335775f73c1448984ba16797adf1,
       type: 2}

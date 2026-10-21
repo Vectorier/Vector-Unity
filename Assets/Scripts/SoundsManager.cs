@@ -114,7 +114,7 @@ public class SoundsManager : MonoBehaviour
             return extra;
         }
 
-        // Steal the one that’s closest to finishing (least remaining time)
+        // Steal the one thatï¿½s closest to finishing (least remaining time)
         // Fallback if all are busy and expansion is not allowed or maxed
         AudioSource candidate = _sfxSources[0];
         float minRemaining = Remaining(candidate);
@@ -252,7 +252,7 @@ public class SoundsManager : MonoBehaviour
     }
 
     /// <summary>3D variant at a world position.</summary>
-    public void PlaySoundAt(string soundName, Vector3 position, float volume = 1f, float pitch = 1f, float spatialBlend = 1f)
+    public void PlaySoundAt(string soundName, Vector3 position, float minDistance = 1f, float maxDistance = 25f, float volume = 1f, float pitch = 1f, float spatialBlend = 1f)
     {
         StartCoroutine(ResourcesLoader.LoadAudioClipAsync(soundName, clip =>
         {
@@ -265,8 +265,8 @@ public class SoundsManager : MonoBehaviour
             src.transform.position = position;
             src.pitch = pitch;
             src.spatialBlend = Mathf.Clamp01(spatialBlend);
-            src.minDistance = 1f;
-            src.maxDistance = 25f;
+            src.minDistance = minDistance;
+            src.maxDistance = maxDistance;
             src.rolloffMode = AudioRolloffMode.Linear;
             src.PlayOneShot(clip, Mathf.Clamp01(volume));
         }));        

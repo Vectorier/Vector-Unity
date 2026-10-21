@@ -4,6 +4,8 @@ using System.Xml;
 using Nekki.Vector.Core.Location.LevelCreation;
 using UnityEngine;
 using Xml2Prefab;
+using Nekki.Vector.Core.Location.Serialized;
+
 
 namespace Nekki.Vector.Core.Location
 {

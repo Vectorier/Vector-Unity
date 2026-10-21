@@ -55,14 +55,11 @@ namespace Nekki.Vector.Core.Transformation
 
             if (_Intervals.Count <= _CurrentInterval)
             {
-                if (_Loop == 0)
+                if (_Loop == 0 && _Loop != -1)
                 {
-                    if (_Loop != -1)
-                    {
                         _Runner.TweenPosition.Reset();
                         _Pause = true;
                         return false;
-                    }
                 }
                 else
                 {
@@ -84,12 +81,9 @@ namespace Nekki.Vector.Core.Transformation
             {
                 for (int i = 0; i < p_step; i++)
                 {
-                    if (_Intervals.Count <= _CurrentInterval)
+                    if (_Intervals.Count <= _CurrentInterval && (_Loop < 1 && _Loop != -1))
                     {
-                        if (_Loop < 1 && _Loop != -1)
-                        {
-                            return;
-                        }
+                        return;
                     }
                     _Intervals[_CurrentInterval].InerationFake(ref p_point, ref p_velocity, i == 0);
                 }

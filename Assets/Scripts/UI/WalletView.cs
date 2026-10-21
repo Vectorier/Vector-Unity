@@ -21,7 +21,7 @@ namespace UI
 		{
 			_playerData = UserDataManager.Instance;
 			_playerData.MainData.CoinsChangedEvent += RunAnimation;
-			UiRoot.Instance.pauseAnimationWalletView += OnPauseAnimation;
+			// UiRoot.Instance.pauseAnimationWalletView += OnPauseAnimation;
 			_lastValue = _playerData.MainData.GetCoins();
 			StarsText.text = _playerData.GameStats.GetAllStars().ToString();
 			CoinsText.text = _lastValue.ToString();

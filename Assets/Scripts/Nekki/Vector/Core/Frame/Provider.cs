@@ -11,7 +11,7 @@ namespace Nekki.Vector.Core.Frame
 
 		public int Length => Data.Length;
 
-		public Vector3[] this[int p_index] => null;
+		public Vector3[] this[int p_index] => Data[p_index];
 
 		public Provider(int count)
 		{

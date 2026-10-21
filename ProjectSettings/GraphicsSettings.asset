@@ -41,7 +41,7 @@ GraphicsSettings:
   m_PreloadShadersBatchTimeLimit: -1
   m_SpritesDefaultMaterial: {fileID: 10754, guid: 0000000000000000f000000000000000,
     type: 0}
-  m_CustomRenderPipeline: {fileID: 11400000, guid: ed61506b9af311042b91e937ddf68aa3,
+  m_CustomRenderPipeline: {fileID: 11400000, guid: b4908784b0d894d479dc3182ebb2773d,
     type: 2}
   m_TransparencySortMode: 3
   m_TransparencySortAxis: {x: 0, y: 0, z: 1}
@@ -114,7 +114,7 @@ GraphicsSettings:
   m_FogKeepExp2: 1
   m_AlbedoSwatchInfos: []
   m_RenderPipelineGlobalSettingsMap:
-    UnityEngine.Rendering.Universal.UniversalRenderPipeline: {fileID: 11400000, guid: 5107dc5ee454b7d418d79895b7f3f8e2,
+    UnityEngine.Rendering.Universal.UniversalRenderPipeline: {fileID: 11400000, guid: 8142e8b044f87a240b877323d1217853,
       type: 2}
   m_ShaderBuildSettings:
     keywordDeclarationOverrides: []

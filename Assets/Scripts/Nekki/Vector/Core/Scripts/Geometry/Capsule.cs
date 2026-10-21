@@ -63,33 +63,29 @@ namespace Nekki.Vector.Core.Scripts.Geometry
         // Gameplay advances in Update; sample its completed presentation state.
         public void LateUpdate()
         {
+            if (_Base == null || _LineRenderer == null)
+                return;
+
             if (_Stroke != _Base.Stroke)
             {
                 _Stroke = _Base.Stroke;
                 _LineRenderer.widthMultiplier = (float)(_Stroke * 2);
-
             }
 
-            if (_Base != null && _Base.Start != null && _Base.Start.End != null && _Base.End != null && _Base.End.End != null && _LineRenderer != null)
-            {
-                Vector3 start = FixedRenderInterpolation.Position(_Base.Start);
-                Vector3 start2 = FixedRenderInterpolation.Position(_Base.End);
-                double dx = start.x - start2.x;
-                double dy = start.y - start2.y;
-                //double dz = start.Z - start2.Z;
-                double x1 = start.x - dx * _Base.Margin1;
-                double y1 = start.y - dy * _Base.Margin1;
-                //double z1 = start.Z - dz * _Base.Margin1;
-                double x2 = start2.x + dx * _Base.Margin2;
-                double y2 = start2.y + dy * _Base.Margin2;
-                //double z2 = start2.Z + dz * _Base.Margin2;
+            if (_Base.Start?.End == null || _Base.End?.End == null)
+                return;
 
-                var pos1 = new Vector3((float)x1, (float)y1, 0);
-                var pos2 = new Vector3((float)x2, (float)y2, 0);
+            Vector3 start = FixedRenderInterpolation.Position(_Base.Start);
+            Vector3 end = FixedRenderInterpolation.Position(_Base.End);
 
-                _LineRenderer.SetPosition(0, pos1);
-                _LineRenderer.SetPosition(1, pos2);
-            }
+            Vector3 pos1 = Vector3.LerpUnclamped(start, end, (float)_Base.Margin1);
+            Vector3 pos2 = Vector3.LerpUnclamped(end, start, (float)_Base.Margin2);
+
+            pos1.z = 0f;
+            pos2.z = 0f;
+
+            _LineRenderer.SetPosition(0, pos1);
+            _LineRenderer.SetPosition(1, pos2);
         }
     }
 }

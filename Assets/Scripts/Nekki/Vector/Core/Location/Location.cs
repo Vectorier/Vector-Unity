@@ -8,6 +8,8 @@ using Nekki.Vector.Core.User;
 using Nekki.Vector.Core.Visual;
 using UnityEngine;
 using Xml2Prefab;
+using Nekki.Vector.Core.Location.Serialized;
+using ModelHuman = Nekki.Vector.Core.Models.ModelHuman;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -156,6 +158,7 @@ namespace Nekki.Vector.Core.Location
         {
             _transformManager.Update();
             RenderModels();
+            RenderElements();
             _transformManager.RemoveEndedTransformation();
         }
 
@@ -168,7 +171,6 @@ namespace Nekki.Vector.Core.Location
                 Models[i].Render();
                 Collision(Models[i]);
             }
-            RenderElements();
         }
 
         public void RenderElements()
