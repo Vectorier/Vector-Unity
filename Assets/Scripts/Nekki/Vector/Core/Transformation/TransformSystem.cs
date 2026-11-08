@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Xml;
 using Nekki.Vector.Core.Location;
-using Nekki.Vector.Core.Location.LevelCreation;
 
 namespace Nekki.Vector.Core.Transformation
 {
@@ -9,11 +8,9 @@ namespace Nekki.Vector.Core.Transformation
     {
         private List<TransformPrototype> _Storage = new List<TransformPrototype>();
 
-        private int _CurrentSystem;
-
         private Runner _Parent;
 
-        private BaseObjectRunner _MainParent;
+        private ObjectRunner _MainParent;
 
         private bool _IsPaused;
 
@@ -38,7 +35,7 @@ namespace Nekki.Vector.Core.Transformation
             }
         }
 
-        public BaseObjectRunner MainParent
+        public ObjectRunner MainParent
         {
             get => _MainParent;
             set => _MainParent = value;
@@ -137,7 +134,6 @@ namespace Nekki.Vector.Core.Transformation
         public void Reset()
         {
             _FirstIteration = true;
-            _CurrentSystem = 0;
             _IsPaused = true;
             foreach (var t in _Storage)
             {
@@ -185,7 +181,7 @@ namespace Nekki.Vector.Core.Transformation
             return FramesCount;
         }
 
-        public void RunTransformOnObjectRunner(BaseObjectRunner p_object)
+        public void RunTransformOnObjectRunner(ObjectRunner p_object)
         {
 
             foreach (var runner in p_object.Element.Runners)

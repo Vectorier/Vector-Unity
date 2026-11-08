@@ -2,7 +2,6 @@ using Nekki.Vector.Core.Controllers;
 using Nekki.Vector.Core.Location.Animation;
 using Nekki.Vector.Core.Node;
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -11,8 +10,6 @@ namespace Nekki.Vector.Core.Location
 		private int _liveCount;
 
 		private int _liveTime;
-
-		private int _impuls;
 
 		private bool _isRender;
 
@@ -23,15 +20,9 @@ namespace Nekki.Vector.Core.Location
 		{
 			_isRender = false;
 			_TypeClass = RunnerType.Particle;
-			_impuls = 10;
 			_IsPlay = false;
 			_liveTime = (int)(Random.Range(0.5f, 1.5f) * 60);
         }
-
-		protected override void SerializeData()
-		{
-			_UnityObject.AddComponent<Xml2PrefabParticleContainer>().Init(_Name, _DefautPosition.X, _DefautPosition.Y, _Width, _Height, TransformationDataRaw, Choice);
-		}
 
 		public override void Init(float pivotX = 0.5f, float pivotY = 0.5f)
 		{
@@ -104,7 +95,7 @@ namespace Nekki.Vector.Core.Location
 			}
 			base.Render();
 			_node.TimeStep(ControllerPhysics.Gravity);
-            ControllerCollisions.PushingNode(_node, BaseSets.Current.Quads, 0.5);
+            ControllerCollisions.PushingNode(_node, Sets.Current.Quads, 0.5);
 			MoveParticle();
             IsCollision();
 			return false;

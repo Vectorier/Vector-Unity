@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Nekki.Vector.Core.Models;
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -16,8 +15,6 @@ namespace Nekki.Vector.Core.Location
         private ModelType _Type = ModelType.Primitive;
 
         private bool _IsUpdate;
-
-        private bool _IsLoaded;
 
         private List<string> _Sounds;
 
@@ -81,14 +78,9 @@ namespace Nekki.Vector.Core.Location
             _type = type;
         }
 
-        protected override void SerializeData()
+        public override void InitRunner(Point point)
         {
-            UnityObject.AddComponent<Xml2PrefabPrimitiveContainer>().Init(_Name, _type, _DeltaPosition.X, _DeltaPosition.Y, _Impulse, _Sounds, TransformationDataRaw, Choice);
-        }
-
-        public override void InitRunner(Point point, bool serialize = false)
-        {
-            base.InitRunner(point, serialize);
+            base.InitRunner(point);
             _DefautPosition.Set(_position);
         }
 
@@ -102,7 +94,6 @@ namespace Nekki.Vector.Core.Location
             _Model.IsEnabled = true;
             _Model.Layer = UnityObject;
             _Model.Impulse = _Impulse;
-            _IsLoaded = true;
             _Model.Position(new Vector3d(Position.X, Position.Y, 0));
 
         }

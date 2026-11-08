@@ -26,7 +26,7 @@ namespace Nekki.Vector.Core.Trigger.Actions
                 _ValueVar = _ParentLoop.GetParentVar(value2);
                 if (_ValueVar == null)
                 {
-                    DebugUtils.Dialog("Error create Action SetVariable not found" + value2, true);
+                    ErrorDialog.Report("Error create Action SetVariable not found" + value2, true);
                 }
             }
             else
@@ -43,7 +43,7 @@ namespace Nekki.Vector.Core.Trigger.Actions
             }
             if (_SetVar == null)
             {
-                DebugUtils.LogError("Error create Action SetVariable not found = " + value);
+                UnityEngine.Debug.LogError("Error create Action SetVariable not found = " + value);
             }
         }
 

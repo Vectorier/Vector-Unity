@@ -11,13 +11,8 @@ namespace Nekki.Vector.GUI.Scenes.Main
 
         List<StarsLobbyItem> _stars = new List<StarsLobbyItem>();
 
-        bool _loaded = false;
-
         void OnEnable()
         {
-            // if (_loaded)
-            //     return;
-
             var gameStats = UserDataManager.Instance.GameStats;
 
             int count = 0;
@@ -50,7 +45,6 @@ namespace Nekki.Vector.GUI.Scenes.Main
                 }
             }
 
-            _loaded = true;
         }
     }
 }

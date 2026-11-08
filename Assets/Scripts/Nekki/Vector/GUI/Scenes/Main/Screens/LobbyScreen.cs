@@ -66,7 +66,7 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
             {
                 if (r)
                 {
-                    Utils.Utils.QuitGame();
+                    Application.Quit();
                 }
             });
         }

@@ -2,9 +2,9 @@ Vector 1.4.4 Unity project and PC port made using Ghidra and DevXUnity.
 
 The code is a combination of Ghidra decompilation and Vector 2's code, though the game behaviour is almost exactly the same as the original.
 
-The project uses Unity version 6000.3.11f1.
+The project uses Unity version 6000.6.8f1 with the Universal Render Pipeline.
 
-Resources are located on Vector_Data/StreamingAssets
+Game content (levels, objects, models, animations, textures, sounds, localization) is loaded from `Vector_Data/StreamingAssets` (`Assets/StreamingAssets` in the project), so it can be modded without rebuilding the game.
 
 ## Features
 
@@ -13,22 +13,21 @@ Resources are located on Vector_Data/StreamingAssets
 - Vector 2 movement system support
 - Custom texture support
 - Controller support
-- And more
+- Graphics options: resolution, window mode, VSync and anti-aliasing (FXAA, SMAA, MSAA 2x/4x/8x)
 
-## Snail Runner
+## Project layout
 
-Launch the game with the command "-level LEVEL NAME" to go into Snail Runner. This will launch the game directly into the level with debug mode.
-In debug mode you can see FPS an the current player animation along with its frame. The level will also restart when you beat it.
+| Folder | Contents |
+| --- | --- |
+| `Assets/Art` | UI sprites (by purpose), sprite atlases, branding images, render textures |
+| `Assets/Prefabs/UI` | Menu screens, dialogs and list items |
+| `Assets/Resources` | Only what is loaded by path at runtime: fonts, shaders, gameplay prefabs, `SoundsManager`, DOTween settings |
+| `Assets/Scenes` | `Preloader` (loads data) and `Main` (menus and gameplay) |
+| `Assets/Scripts` | `App`, `Audio`, `Content` (StreamingAssets loading), `Data` (save data and game data), `Gameplay`, `Input`, `Localization`, `Settings`, `UI`, and `Nekki` (the game core and screens, kept in their original namespaces) |
+| `Assets/Settings` | URP pipeline/renderer/volume assets and the input actions |
+| `Assets/StreamingAssets` | Moddable game content |
 
-Other Snail Runner commands are:
-- "-noui": Disables debug UI.
-- "-huntermode": Plays the level in Hunter Mode instead of Classic Mode.
-- "-showtriggers": Makes triggers visible.
-- "-showplatforms": Makes platforms visible.
-- "-showareas": Makes areas visible.
-- "-showdetectors": Makes detectors in all human models visible.
-
-The level's XML file should be in xmlroot/levels in the resources directory for Snail Runner to launch it.
+The player's progress is saved to `saves/UserData.data` next to the game executable (the persistent data path on mobile).
 
 ## Vectorier
 

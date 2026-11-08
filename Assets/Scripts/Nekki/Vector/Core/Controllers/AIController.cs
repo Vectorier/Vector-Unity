@@ -124,14 +124,12 @@ public class AIController : MonoBehaviour
 
         var groundHit = Physics2D.Raycast(groundPos, Vector2.up, groundProbeDistance);
 
-        RayDrawer.Instance.DrawRay(new RayDrawer.RayData(groundPos, Vector2.up, 0, groundProbeDistance, groundHit, groundHit));
 
         if (!groundHit)
         {
             var extraPos = ApplyFacingOffset(groundPos, extraGroundProbeOffset, _Model.Sign);
             var extraGround = Physics2D.Raycast(extraPos, Vector2.up, extraGroundProbeDistance);
 
-            RayDrawer.Instance.DrawRay(new RayDrawer.RayData(extraPos, Vector2.up, 0, extraGroundProbeDistance, extraGround, extraGround));
 
             var gapPos = ApplyFacingOffset(groundPos, gapProbeOffset, _Model.Sign);
 
@@ -139,7 +137,6 @@ public class AIController : MonoBehaviour
 
             var gapHit = Physics2D.Raycast(gapPos, gapDirection, gapProbeDistance);
 
-            RayDrawer.Instance.DrawRay(new RayDrawer.RayData(gapPos, gapDirection, 0, gapProbeDistance, gapHit, gapHit));
 
             if (gapHit && gapHit.fraction > 0.01f)
             {
@@ -176,7 +173,6 @@ public class AIController : MonoBehaviour
 
         var forwardHit = Physics2D.Raycast(forwardPos, forwardDirection, forwardProbeDistance);
 
-        RayDrawer.Instance.DrawRay(new RayDrawer.RayData(forwardPos, forwardDirection, 0, forwardProbeDistance, forwardHit, forwardHit));
 
         if (forwardHit && forwardHit.fraction > 0.01f)
         {
@@ -184,7 +180,6 @@ public class AIController : MonoBehaviour
 
             var downHit = Physics2D.Raycast(downPos, Vector2.up, downProbeDistance);
 
-            RayDrawer.Instance.DrawRay(new RayDrawer.RayData(downPos, Vector2.up, 0, downProbeDistance, downHit, downHit));
 
 
 
@@ -192,7 +187,6 @@ public class AIController : MonoBehaviour
 
             var obstacleHit = Physics2D.Raycast(obstaclePos, -forwardDirection, obstacleProbeDistance);
 
-            RayDrawer.Instance.DrawRay(new RayDrawer.RayData(obstaclePos, -forwardDirection, 0, obstacleProbeDistance, obstacleHit, obstacleHit));
 
             var obstacleGroundHit = Physics2D.Raycast(new Vector2(forwardHit.point.x + forwardDirection.x * 3, (float)_DetectorH.Start.Start.Y + groundProbeOffset.y), Vector2.up, groundProbeDistance);
 
@@ -210,7 +204,6 @@ public class AIController : MonoBehaviour
 
             if (downHit)
             {
-                RayDrawer.Instance.DrawSphere(new RayDrawer.SphereData(downHit.point, 10, Color.yellow));
 
                 Jump(forwardHit.collider);
 
@@ -229,7 +222,6 @@ public class AIController : MonoBehaviour
 
         var slideHit = Physics2D.Raycast(slidePos, slideDirection, slideProbeDistance);
 
-        RayDrawer.Instance.DrawRay(new RayDrawer.RayData(slidePos, slideDirection, 0, slideProbeDistance, slideHit, slideHit));
 
         if (slideHit && slideHit.fraction > 0.01f)
         {

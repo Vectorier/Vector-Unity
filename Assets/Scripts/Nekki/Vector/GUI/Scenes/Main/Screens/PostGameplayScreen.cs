@@ -4,7 +4,6 @@ using UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using UI;
 
 namespace Nekki.Vector.GUI.Scenes.Main.Screens
 {
@@ -70,31 +69,29 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
 
             _coinsByStars = new int[3];
 
-            if (userData.MainData.IsUnlock)
+            var rewardData = LocationManager.Instance.GetRewards(currentStory.RewardTemplate);
+            var extension = rewardData.GetReward(stars, _starRecord);
+            if (_starRecord > 0)
             {
-                var rewardData = LocationManager.Instance.GetRewards(currentStory.RewardTemplate);
-                var extension = rewardData.GetReward(stars, _starRecord);
-                if (_starRecord > 0)
+                for (int i = 0; i < _starRecord; i++)
                 {
-                    for (int i = 0; i < _starRecord; i++)
+                    if (i < stars)
                     {
-                        if (i < stars)
-                        {
-                            _coinsByStars[i] = -1;
-                        }
-                        else
-                        {
-                            _coinsByStars[i] = rewardData[i + 1];
-                        }
+                        _coinsByStars[i] = -1;
+                    }
+                    else
+                    {
+                        _coinsByStars[i] = rewardData[i + 1];
                     }
                 }
-                else
-                {
-                    extension = 0;
-                }
-
-                userData.MainData.AddCoins(extension);
             }
+            else
+            {
+                extension = 0;
+            }
+
+            userData.MainData.AddCoins(extension);
+
 
             _title.text = LocalizationManager.Instance.GetTranslationByID(currentStory.Name);
             UpdateTimeLabel(res, stats);

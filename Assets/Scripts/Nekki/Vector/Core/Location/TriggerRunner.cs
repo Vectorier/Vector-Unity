@@ -4,7 +4,6 @@ using Nekki.Vector.Core.Models;
 using Nekki.Vector.Core.Trigger;
 using Nekki.Vector.Core.Trigger.Events;
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -115,16 +114,6 @@ namespace Nekki.Vector.Core.Location
                 _CollisionType = TriggerColisionType.MultiNode;
                 _NodesName = new List<string>(array);
             }
-        }
-
-        protected override void SerializeData()
-        {
-            if (_UnityObject == null)
-            {
-                CreateObject();
-            }
-            _UnityObject.AddComponent<Xml2PrefabTriggerContainer>().Init(_rawNode.OuterXml, _h, _w, Choice);
-            _CachedTransform = _UnityObject.transform;
         }
 
         private void InitEvents()
@@ -351,7 +340,7 @@ namespace Nekki.Vector.Core.Location
         {
             if (!vars.ContainsKey(p_key))
             {
-                DebugUtils.Dialog("No Var Name = " + p_key + " in trigger " + Name, true);
+                ErrorDialog.Report("No Var Name = " + p_key + " in trigger " + Name, true);
                 return null;
             }
             return vars[p_key];

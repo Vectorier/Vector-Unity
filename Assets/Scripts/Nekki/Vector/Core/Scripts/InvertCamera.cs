@@ -3,6 +3,10 @@ using UnityEngine.Rendering;
 
 namespace Nekki.Vector.Core.Scripts
 {
+    /// <summary>
+    /// Flips the gameplay camera's projection (Vector data is Y-down) and inverts face culling while it renders.
+    /// </summary>
+    [RequireComponent(typeof(UnityEngine.Camera))]
     public class InvertCamera : MonoBehaviour
     {
         [SerializeField]
@@ -30,31 +34,15 @@ namespace Nekki.Vector.Core.Scripts
             }
         }
 
-        private void OnPreCull()
-        {
-            ApplyInversion(_camera);
-        }
-
-        private void OnPreRender()
-        {
-            _previousInvertCulling = GL.invertCulling;
-            GL.invertCulling = true;
-            _cullingChanged = true;
-        }
-
-        private void OnPostRender()
-        {
-            RestoreCulling();
-        }
-
         private void OnBeginCameraRendering(ScriptableRenderContext context, UnityEngine.Camera camera)
         {
             if (camera != _camera)
             {
                 return;
             }
-
-            ApplyInversion(camera);
+            camera.ResetWorldToCameraMatrix();
+            camera.ResetProjectionMatrix();
+            camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(_Scale);
             _previousInvertCulling = GL.invertCulling;
             GL.invertCulling = true;
             _cullingChanged = true;
@@ -66,16 +54,8 @@ namespace Nekki.Vector.Core.Scripts
             {
                 return;
             }
-
             RestoreCulling();
             camera.ResetProjectionMatrix();
-        }
-
-        private void ApplyInversion(UnityEngine.Camera camera)
-        {
-            camera.ResetWorldToCameraMatrix();
-            camera.ResetProjectionMatrix();
-            camera.projectionMatrix = camera.projectionMatrix * Matrix4x4.Scale(_Scale);
         }
 
         private void RestoreCulling()

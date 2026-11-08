@@ -8,7 +8,6 @@ using System.IO;
 using System.Xml;
 using UI;
 using UnityEngine;
-using Xml2Prefab;
 using Sprite = UnityEngine.Sprite;
 
 namespace Nekki.Vector.Core.Location
@@ -105,33 +104,17 @@ namespace Nekki.Vector.Core.Location
             _Depth = depth;
         }
 
-        public override void Generate(GameObject existRunner)
-        {
-            base.Generate(existRunner);
-            _SpriteRender = UnityObject.GetComponent<SpriteRenderer>();
-        }
-
         public override void Generate()
         {
             base.Generate();
             GenerateContent();
         }
 
-        protected override void SerializeData()
-        {
-            var node = "";
-            if (Node != null)
-            {
-                node = Node.OuterXml;
-            }
-            _UnityObject.AddComponent<Xml2PrefabVisualRunnerContainer>().Init(_Type, _Name, _ImageWidth, _ImageHeight, _DefaultColor, _Depth, node, (float)Point.X, (float)Point.Y, TransformationDataRaw, Choice);
-        }
-
         public void GenerateContent()
         {
             if (string.IsNullOrEmpty(_Name))
             {
-                DebugUtils.Dialog("Image with no name", false);
+                ErrorDialog.Report("Image with no name", false);
             }
             if (IsAnimation(_Name))
             {
@@ -146,7 +129,7 @@ namespace Nekki.Vector.Core.Location
             {
                 if (sprite == null)
                 {
-                    DebugUtils.Dialog("Image not found: " + _Name, false);
+                    ErrorDialog.Report("Image not found: " + _Name, false);
                     return;
                 }
                 _SpriteRender.sprite = sprite;
@@ -229,9 +212,9 @@ namespace Nekki.Vector.Core.Location
             return true;
         }
 
-        public override void InitRunner(Point point, bool serialize = false)
+        public override void InitRunner(Point point)
         {
-            base.InitRunner(point, serialize);
+            base.InitRunner(point);
             UpdateUnityObjectPosition(Position);
             UpdateColor();
 

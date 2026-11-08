@@ -100,7 +100,7 @@ namespace Nekki.Vector.Core.Trigger.Functions
             }
             if (_Geter == null && _NodeFunc == null)
             {
-                DebugUtils.Dialog("TF_Func init error by geterName = " + text, true);
+                ErrorDialog.Report("TF_Func init error by geterName = " + text, true);
             }
         }
 

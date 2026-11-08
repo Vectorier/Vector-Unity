@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UI.InputControllers;
 
 namespace UI.Dialogs
 {
@@ -23,7 +22,6 @@ namespace UI.Dialogs
         private static readonly List<Entry> open = new List<Entry>();
         private static readonly Dictionary<BaseDialog, Entry> overlays = new Dictionary<BaseDialog, Entry>();
         private static readonly Dictionary<Behaviour, bool> input = new Dictionary<Behaviour, bool>();
-        private static bool blocked;
         private static GameObject blocker;
         public static int OpenDialogCount => open.Count;
 
@@ -58,13 +56,6 @@ namespace UI.Dialogs
             open.Add(entry);
             if (modal)
             {
-                if (!blocked)
-                {
-                    blocked = true;
-                    UIBindings.InputBlockingChanged?.Invoke(true);
-                    UIBindings.BackgroundEffectChanged?.Invoke(true);
-                }
-
                 UpdateModalOrder();
             }
         }
@@ -72,10 +63,7 @@ namespace UI.Dialogs
         private static void CaptureInput(BaseDialog dialog)
         {
             InputController.instance.Disable();
-            foreach (var keyboard in Object.FindObjectsOfType<KeyboardController>(true))
-                if (keyboard.gameObject.scene == dialog.gameObject.scene)
-                    SaveAndDisable(keyboard);
-            foreach (var caster in Object.FindObjectsOfType<GraphicRaycaster>(true))
+            foreach (var caster in Object.FindObjectsByType<GraphicRaycaster>(FindObjectsInactive.Include))
                 if (caster.gameObject.scene == dialog.gameObject.scene &&
                     (blocker == null || caster.gameObject != blocker) && !IsOwnedCaster(caster))
                     SaveAndDisable(caster);
@@ -117,7 +105,7 @@ namespace UI.Dialogs
             int order = 0,
                 layer = top.Canvas.rootCanvas.sortingLayerID,
                 layerValue = top.Canvas.rootCanvas.cachedSortingLayerValue;
-            foreach (var canvas in Object.FindObjectsOfType<Canvas>(true))
+            foreach (var canvas in Object.FindObjectsByType<Canvas>(FindObjectsInactive.Include))
             {
                 if (canvas.gameObject.scene != top.Dialog.gameObject.scene ||
                     (blocker != null && canvas.gameObject == blocker) || open.Exists(e => e.Canvas == canvas)) continue;
@@ -197,15 +185,7 @@ namespace UI.Dialogs
                 blocker = null;
             }
 
-            if (blocked)
-            {
-                blocked = false;
-                UIBindings.InputBlockingChanged?.Invoke(false);
-                UIBindings.BackgroundEffectChanged?.Invoke(false);
-            }
-            
             InputController.instance.Enable();
-            
         }
 
         public static void Reset()

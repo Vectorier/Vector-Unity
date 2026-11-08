@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location.Animation
 {
@@ -57,11 +56,6 @@ namespace Nekki.Vector.Core.Location.Animation
             _CachedTransform.localScale = scale;
 
             _DefaultScale = _CachedTransform.localScale;
-        }
-
-        protected override void SerializeData()
-        {
-            _UnityObject.AddComponent<Xml2PrefabAnimationContainer>().Init(_Name, _X, _Y, _Width, _Height, _Type, _ScaleX, _ScaleY, TransformationDataRaw, Choice);
         }
 
         public override void Reset()

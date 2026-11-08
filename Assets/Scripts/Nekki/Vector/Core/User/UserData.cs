@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Xml;
+using Nekki.Vector.Core.Utilites;
 using Nekki.Vector.Core.Animation;
 using UnityEngine;
 using AnimationInfo = Nekki.Vector.Core.Animation.AnimationInfo;
@@ -164,6 +166,49 @@ namespace Nekki.Vector.Core.User
 		public UserData(string userID)
 		{
 			_UserId = userID;
+		}
+
+		/// <summary>Builds a model from a level's &lt;Model&gt; node.</summary>
+		public static UserData FromXml(XmlNode node)
+		{
+			var userData = new UserData("");
+			userData.Name = node.Attributes["Name"].Value;
+			userData.BirthSpawn = node.Attributes["BirthSpawn"].ParseString("");
+			userData.isIcon = node.Attributes["Icon"].ParseBool();
+			userData.Color = node.Attributes["Color"] == null ? Color.black : ColorUtils.FromHex(node.Attributes["Color"].Value);
+			userData.Skins = SplitList(node.Attributes["Skins"]);
+			userData.Stocks = SplitList(node.Attributes["Stocks"]);
+			userData.Arrests = SplitList(node.Attributes["Arrests"]);
+			userData.Murders = SplitList(node.Attributes["Murders"]);
+			userData.Respawns = SplitList(node.Attributes["Respawns"]);
+			userData.Births = SplitList(node.Attributes["AllowedSpawns"]);
+			userData.IsSelf = node.Attributes["Type"].ParseBool();
+			userData.IsTrick = node.Attributes["Trick"].ParseBool();
+			userData.IsItem = node.Attributes["Item"].ParseBool();
+			userData.IsVictory = node.Attributes["Victory"].ParseBool();
+			userData.IsLost = node.Attributes["Lose"].ParseBool();
+			userData.AI = node.Attributes["AI"].ParseInt();
+			userData.StartTime = node.Attributes["Time"].ParseFloat();
+			userData.LiveTime = node.Attributes["LifeTime"].ParseFloat(2);
+			if (userData.Skins.Count == 0)
+			{
+				// Default skin plus whatever gear the player has equipped in the store.
+				userData.Skins.Add("1");
+				foreach (var item in StoreManager.Instance.GetItems(StoreItemType.Gear))
+				{
+					if (Game.IsItemEquipped(item.Id))
+					{
+						userData.Skins.Add(item.Id);
+					}
+				}
+			}
+			userData.Init();
+			return userData;
+		}
+
+		private static List<string> SplitList(XmlAttribute attribute)
+		{
+			return attribute == null ? new List<string>() : new List<string>(attribute.Value.Split('|'));
 		}
 
 		public void Init()

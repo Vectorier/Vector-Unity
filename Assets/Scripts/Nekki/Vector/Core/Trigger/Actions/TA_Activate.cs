@@ -1,5 +1,4 @@
 using Nekki.Vector.Core.Location;
-using Nekki.Vector.Core.Location.LevelCreation;
 using Nekki.Vector.Core.Trigger.Events;
 using System.Collections.Generic;
 using System.Xml;
@@ -30,7 +29,7 @@ namespace Nekki.Vector.Core.Trigger.Actions
             ActivEvents(_ParentLoop.ParentTrigger.ParentElements.ParentObject);
         }
 
-        private void ActivEvents(BaseObjectRunner p_object)
+        private void ActivEvents(ObjectRunner p_object)
         {
             List<TriggerRunner> triggers = p_object.Element.Triggers;
             TE_Activate p_event = new TE_Activate(_ActivationID.ValueString);
@@ -39,7 +38,7 @@ namespace Nekki.Vector.Core.Trigger.Actions
                 triggers[i].CheckEvent(p_event, null);
             }
 
-            List<BaseObjectRunner> childs = p_object.Childs;
+            List<ObjectRunner> childs = p_object.Childs;
             for (int j = 0; j < childs.Count; j++)
             {
                 ActivEvents(childs[j]);

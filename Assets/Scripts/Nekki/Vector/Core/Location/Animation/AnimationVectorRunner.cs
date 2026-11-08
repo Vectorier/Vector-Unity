@@ -1,5 +1,4 @@
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location.Animation
 {
@@ -31,11 +30,6 @@ namespace Nekki.Vector.Core.Location.Animation
 			_AccelerationResult = new Vector3f(_Acceleration);
 			_Life = life;
 			_IsPlay = false;
-		}
-
-		protected override void SerializeData()
-		{
-			_UnityObject.AddComponent<Xml2PrefabAnimationVectorContainer>().Init(_Name, _X, _Y, _Width, _Height, _Type, _ScaleX, _ScaleY, TransformationDataRaw, _Direction.X, _Direction.Y, _Acceleration.X, _Acceleration.Y, _Life, Choice); ;
 		}
 
 		public override void Reset()

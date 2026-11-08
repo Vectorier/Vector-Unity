@@ -6,8 +6,6 @@ namespace Nekki.Vector.Core.Controllers
 {
 	public class ControllerPhysics
 	{
-		private int _Iterative = 1;
-
 		private ModelObject _ModelObject;
 
 		private bool _IsPhysics;

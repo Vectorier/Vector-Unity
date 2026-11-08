@@ -67,7 +67,7 @@ namespace Nekki.Vector.Core.Scripts
         {
             if (sprites == null)
             {
-                DebugUtils.Dialog("Error create animation", false, true);
+                ErrorDialog.Report("Error create animation", false, true);
 
                 return;
             }
@@ -76,7 +76,7 @@ namespace Nekki.Vector.Core.Scripts
 
             if (_totalFrames == 0)
             {
-                DebugUtils.Dialog("Error create animation", false);
+                ErrorDialog.Report("Error create animation", false);
                 return;
             }
             if (p_spriteRender == null)
@@ -154,7 +154,7 @@ namespace Nekki.Vector.Core.Scripts
 
             if (p_name.StartsWith(Application.streamingAssetsPath) && !ResourceManager.FileExists(p_name, out atlasPath, ".plist", ".json"))
             {
-                DebugUtils.Dialog("Animation not found: " + Path.GetFileNameWithoutExtension(p_name), false, true);
+                ErrorDialog.Report("Animation not found: " + Path.GetFileNameWithoutExtension(p_name), false, true);
             }
 
 

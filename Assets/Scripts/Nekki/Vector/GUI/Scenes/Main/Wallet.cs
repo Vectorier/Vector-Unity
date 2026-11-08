@@ -55,9 +55,16 @@ namespace Nekki.Vector.GUI.Scenes.Main
             }
         }
 
-        public void Update()
+        protected override void OnActivated()
         {
+            base.OnActivated();
             StarsText.text = _playerData.GameStats.GetAllStars().ToString();
+        }
+
+        protected override void Free()
+        {
+            base.Free();
+            _playerData.MainData.CoinsChangedEvent -= RunAnimation;
         }
     }
 }

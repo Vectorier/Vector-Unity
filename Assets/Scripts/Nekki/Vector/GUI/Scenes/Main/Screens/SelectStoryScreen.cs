@@ -4,7 +4,6 @@ using UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using UI;
 
 namespace Nekki.Vector.GUI.Scenes.Main.Screens
 {

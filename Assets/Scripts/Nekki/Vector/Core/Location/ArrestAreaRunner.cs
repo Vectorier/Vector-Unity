@@ -26,20 +26,10 @@ namespace Nekki.Vector.Core.Location
             _Distance = distance;
         }
 
-        public override void InitRunner(Point point, bool serialize = false)
+        public override void InitRunner(Point point)
         {
-            base.InitRunner(point, serialize);
+            base.InitRunner(point);
             UpdateUnityObjectPosition(Position);
-        }
-
-        protected override void SerializeData()
-        {
-            if (_UnityObject == null)
-            {
-                CreateObject();
-            }
-            _UnityObject.AddComponent<Xml2PrefabArrestAreaContainer>().Init(TransformationDataRaw, _TypeName, _Name, _X, _Y, _W, _H, Choice);
-            _CachedTransform = _UnityObject.transform;
         }
 
         public override void Activate(ModelHuman modelHuman)

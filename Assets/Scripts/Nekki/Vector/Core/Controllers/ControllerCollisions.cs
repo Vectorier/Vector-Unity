@@ -62,15 +62,6 @@ namespace Nekki.Vector.Core.Controllers
             _modelControllerCatching.Reset();
 		}
 
-		public void UpdateQuad(QuadRunner quad, int sign)
-		{
-            if (quad is TrickAreaRunner trick && IsCollide(trick))
-            {
-                trick.ExpandTrickAreaOnce(sign);
-            }
-            UpdateQuad(quad);
-		}
-
 		public void UpdateQuad(QuadRunner quad)
 		{
             quad.IsRender = false;

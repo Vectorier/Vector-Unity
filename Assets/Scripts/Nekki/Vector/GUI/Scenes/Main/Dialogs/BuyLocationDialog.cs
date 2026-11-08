@@ -33,7 +33,7 @@ namespace Nekki.Vector.GUI.Scenes.Main.Dialogs
             if (UserDataManager.Instance.MainData.GetCoins() < _price)
             {
                 Dismiss();
-                MainScene.Current.GetDialog<BuyCoinsDialog>().Show(_price);
+                MainScene.Current.GetDialog<NotEnoughCoinsDialog>().Show(_price);
             }
             else
             {

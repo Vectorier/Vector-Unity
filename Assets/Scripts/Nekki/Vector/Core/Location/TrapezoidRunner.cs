@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -68,15 +67,6 @@ namespace Nekki.Vector.Core.Location
             //ConfigureCollider();
         }
 
-        public override void Generate(GameObject existRunner)
-        {
-            base.Generate(existRunner);
-            if (existRunner != null)
-            {
-                ConfigureCollider();
-            }
-        }
-
         private void ConfigureCollider()
         {
             CalcPoints();
@@ -97,16 +87,6 @@ namespace Nekki.Vector.Core.Location
             collider.offset = new Vector2(
                 (float)((minX + maxX) * 0.5 - localPosition.x),
                 (float)((minY + maxY) * 0.5 - localPosition.y));
-        }
-
-        protected override void SerializeData()
-        {
-            if (_UnityObject == null)
-            {
-                CreateObject();
-            }
-
-            _UnityObject.AddComponent<Xml2PrefabTrapezoidContainer>().Init(_className, _type, _x, _y, _width, _height, _height1, _sticky, TransformationDataRaw, Choice); ;
         }
 
         public override bool Hit(double x, double y, bool equality)

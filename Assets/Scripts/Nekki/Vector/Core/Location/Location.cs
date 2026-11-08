@@ -7,57 +7,27 @@ using Nekki.Vector.Core.Trigger.Events;
 using Nekki.Vector.Core.User;
 using Nekki.Vector.Core.Visual;
 using UnityEngine;
-using Xml2Prefab;
-using Nekki.Vector.Core.Location.Serialized;
 using ModelHuman = Nekki.Vector.Core.Models.ModelHuman;
 
 namespace Nekki.Vector.Core.Location
 {
     public class Location
     {
-        private static Location _Current;
+        private readonly Grid.Grid _Grid = new Grid.Grid();
 
-        private List<VisualContainer> _visualContainers = new List<VisualContainer>();
+        private readonly List<QuadRunner> _culledQuads = new List<QuadRunner>();
 
-        private bool _isDebugMode;
+        private readonly List<QuadRunner> belongQuads = new List<QuadRunner>();
 
-        private Grid.Grid _Grid = new Grid.Grid();
+        private readonly TransformManager _transformManager;
 
-        private List<QuadRunner> _culledQuads = new List<QuadRunner>();
-
-        private List<QuadRunner> belongQuads = new List<QuadRunner>();
-
-        private TransformManager _transformManager;
-
-        public static Location Current => null;
-
-        public List<ModelHuman> Models
-        {
-            get;
-        }
+        public List<ModelHuman> Models { get; } = new List<ModelHuman>();
 
         public string Music => Sets.Music;
 
         public List<UserData> UserData => Sets.UserData;
 
-        public BaseSets Sets
-        {
-            get;
-            private set;
-        }
-
-        public bool DebugMode
-        {
-            get => _isDebugMode;
-            set
-            {
-                _isDebugMode = value;
-                foreach (var model in Models)
-                {
-                    model.DebugMode = value;
-                }
-            }
-        }
+        public Sets Sets { get; }
 
         public Grid.Grid Grid => _Grid;
 
@@ -69,65 +39,21 @@ namespace Nekki.Vector.Core.Location
 
         public int TrickOnLocation => Sets.totalTricks;
 
-#if UNITY_EDITOR
-        public Location(GameObject existLevel)
+        /// <summary>Loads the level <paramref name="fileName"/> (".xml" optional) from <paramref name="xmlPath"/>.</summary>
+        public Location(string xmlPath, string fileName)
         {
-            Models = new List<ModelHuman>();
-
-            existLevel.transform.localScale = Vector3.one;
-            existLevel.transform.position = Vector3.zero;
-            Sets = new SerializedSets(existLevel.GetComponent<Xml2PrefabLevelContainer>());
-
+            if (!fileName.EndsWith(".xml"))
+            {
+                fileName += ".xml";
+            }
+            var doc = XmlUtils.OpenXMLDocument(xmlPath, fileName);
+            if (doc == null)
+            {
+                throw new System.IO.FileNotFoundException("Can't open location file " + fileName);
+            }
+            Sets = new Sets(doc);
             _Grid.InitGrid(Sets.QuadsAll);
             _transformManager = new TransformManager();
-
-            _Current = this;
-        }
-#endif
-
-        public Location(string xmlPath, string filePath, string prefabPath)
-        {
-            Models = new List<ModelHuman>();
-
-            if (Game.Instance.SnailSett.UsePrefab)
-            {
-                string file = filePath.Replace(".xml", "");
-                string prefab = prefabPath + "/" + file;
-
-                var obj = Resources.Load<GameObject>(prefab);
-                obj = Object.Instantiate(obj);
-                obj.name = "Level_root_object";
-                obj.transform.localScale = Vector3.one;
-                Sets = new SerializedSets(obj.GetComponent<Xml2PrefabLevelContainer>());
-            }
-            else
-            {
-                LoadXml(xmlPath, filePath);
-            }
-
-            _Grid.InitGrid(Sets.QuadsAll);
-            _transformManager = new TransformManager();
-
-            _Current = this;
-        }
-
-        private void LoadXml(string xmlPath, string filePath)
-        {
-            if (!filePath.EndsWith(".xml"))
-            {
-                filePath += ".xml";
-            }
-            Xml2PrefabRoot.UseOnlyXML = true;
-            var doc = XmlUtils.OpenXMLDocument(xmlPath, filePath);
-            if (doc != null)
-            {
-                Sets = new Sets(doc);
-                return;
-            }
-            if (CurrentTrackInfo.Current != null)
-            {
-                Debug.Log("Can't open location file " + CurrentTrackInfo.Current.LocationFile);
-            }
         }
 
         public void CreateModelHuman(UserData userData)
@@ -147,10 +73,6 @@ namespace Nekki.Vector.Core.Location
             }
             LocationCamera.Current.StartPosition(pos);
             LocationCamera.Current.UpdatePosition();
-            foreach (var container in _visualContainers)
-            {
-                container.Init();
-            }
             TE_StartGame.ActivateThisEvent();
         }
 
@@ -180,10 +102,6 @@ namespace Nekki.Vector.Core.Location
                 primitive.Render(Sets.Quads);
             }
             RunnerRender.RenderRunners();
-            foreach (var container in _visualContainers)
-            {
-                container.Render();
-            }
         }
 
         public void Collision(ModelHuman p_modelHuman)
@@ -204,7 +122,7 @@ namespace Nekki.Vector.Core.Location
             }
             foreach (var quad1 in _culledQuads)
             {
-                p_modelHuman.ControllerCollisions.UpdateQuad(quad1, p_modelHuman.Sign);
+                p_modelHuman.ControllerCollisions.UpdateQuad(quad1);
             }
             foreach (var item in Sets.Items)
             {
@@ -239,10 +157,6 @@ namespace Nekki.Vector.Core.Location
 
         private void ReloadLayers()
         {
-            foreach (var container in _visualContainers)
-            {
-                container.Reset();
-            }
             _Grid.Reset();
         }
 

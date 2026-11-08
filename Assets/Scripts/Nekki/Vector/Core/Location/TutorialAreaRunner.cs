@@ -1,6 +1,5 @@
 using Nekki.Vector.Core.Controllers;
 using Nekki.Vector.Core.Models;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -36,10 +35,6 @@ namespace Nekki.Vector.Core.Location
 			{
 				if (_repeatCounter < 2)
 				{
-					if (Game.Instance.Snail)
-					{
-						return true;
-					}
 					return !LevelMainController.current.HasCurrentLocationEverBeenCompleted();
 				}
 				return false;
@@ -66,21 +61,11 @@ namespace Nekki.Vector.Core.Location
 			return false;
 		}
 
-		public override void InitRunner(Point point, bool serialize = false)
+		public override void InitRunner(Point point)
 		{
-			base.InitRunner(point, serialize);
+			base.InitRunner(point);
 			UpdateUnityObjectPosition(Position);
 		}
-
-		protected override void SerializeData()
-		{
-            if (_UnityObject == null)
-            {
-                CreateObject();
-            }
-            _UnityObject.AddComponent<Xml2PrefabTutorialAreaContainer>().Init(TransformationDataRaw, _TypeName, _Name, _X, _Y, _W, _H, _key, Description, Choice);
-            _CachedTransform = _UnityObject.transform;
-        }
 
         public override void Activate(ModelHuman model)
 		{

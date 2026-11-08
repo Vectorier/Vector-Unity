@@ -5,8 +5,6 @@ using UnityEngine;
 using UnityEngine.AdaptivePerformance;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using Utils;
-using UI;
 
 namespace Nekki.Vector.GUI.Scenes.Main.Screens
 {
@@ -179,7 +177,6 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
                         holder.ItemShopView.IconCheck.SetActive(equipped);
                         UserDataManager.Instance.SaveUserDate();
 
-                        EventUtil.DispatchEvent(EventTypes.EQUIP_ITEM, equipped);
                     });
                 }
 
@@ -227,7 +224,7 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
         {
             if (UserDataManager.Instance.MainData.GetCoins() < item.Price)
             {
-                Scene<MainScene>.Current.GetDialog<BuyCoinsDialog>().Show(item.Price);
+                Scene<MainScene>.Current.GetDialog<NotEnoughCoinsDialog>().Show(item.Price);
                 return;
             }
 

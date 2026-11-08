@@ -1,6 +1,5 @@
 using Nekki.Vector.Core.Models;
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -28,14 +27,9 @@ namespace Nekki.Vector.Core.Location
 			_defaultScore = score;
 		}
 
-		protected override void SerializeData()
-		{
-			_UnityObject.AddComponent<Xml2PrefabCoinContainer>().Init(_type, _x, _y, _prefabName, _groupID, _score, TransformationDataRaw, Choice);
-		}
-
 		protected override void GenerateObject()
 		{
-			_UnityObject = Object.Instantiate(Resources.Load<GameObject>("LevelContent/Prefabs/" + _prefabName));
+			_UnityObject = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Gameplay/" + _prefabName));
 			_CachedTransform = _UnityObject.transform;
 			_CachedTransform.localPosition = new Vector3(_DefautPosition.X, _DefautPosition.Y, 0);
             if (_Layer != null)
@@ -56,9 +50,9 @@ namespace Nekki.Vector.Core.Location
 		{
 		}
 
-		public override void InitRunner(Point point, bool serialize = false)
+		public override void InitRunner(Point point)
 		{
-			base.InitRunner(point, serialize);
+			base.InitRunner(point);
 			SetEnable(false);
 		}
 

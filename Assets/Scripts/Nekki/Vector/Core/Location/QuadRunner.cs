@@ -122,10 +122,9 @@ namespace Nekki.Vector.Core.Location
             _Point4 = new Vector3d(_XQuad, _YQuad + _HeightQuad, 0f);
         }
 
+        // Quads only get a GameObject on demand (see CreateObject).
         protected override void GenerateObject()
         {
-            if (Xml2PrefabRoot.Serialize)
-                base.GenerateObject();
         }
 
         public void CreateObject()
@@ -139,14 +138,9 @@ namespace Nekki.Vector.Core.Location
             _CachedTransform.localPosition = new UnityEngine.Vector3((float)_XQuad, (float)_YQuad);
         }
 
-        public override void InitRunner(Point point, bool serialize = false)
+        public override void InitRunner(Point point)
         {
-            if (serialize)
-            {
-                SerializeData();
-            }
-
-            if (point != null && !Xml2PrefabRoot.Serialize)
+            if (point != null)
             {
                 Move(point);
             }
@@ -472,12 +466,12 @@ namespace Nekki.Vector.Core.Location
 
         public int Normal(DetectorLine detector)
         {
-            for (int i = 0; i < _Normales.Count; i++)
+            // Only the first normal is ever considered.
+            if (_Normales.Count == 0)
             {
-                var v1 = detector.Subtract();
-                return (int)(v1 * _Normales[i]);
+                return -1;
             }
-            return -1;
+            return (int)(detector.Subtract() * _Normales[0]);
         }
 
         public Vector3d Corner(int sign, int p_cornernum)

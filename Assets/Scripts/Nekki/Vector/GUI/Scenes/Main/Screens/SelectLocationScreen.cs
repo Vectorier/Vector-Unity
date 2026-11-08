@@ -3,7 +3,6 @@ using Nekki.Vector.GUI.Scenes.Main.Dialogs;
 using UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UI;
 
 namespace Nekki.Vector.GUI.Scenes.Main.Screens
 {

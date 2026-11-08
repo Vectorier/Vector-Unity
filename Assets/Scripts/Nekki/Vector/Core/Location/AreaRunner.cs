@@ -3,7 +3,6 @@ using Nekki.Vector.Core.Controllers;
 using Nekki.Vector.Core.Models;
 using System.Xml;
 using UnityEngine;
-using Xml2Prefab;
 using AnimationInfo = Nekki.Vector.Core.Animation.AnimationInfo;
 
 namespace Nekki.Vector.Core.Location
@@ -64,16 +63,6 @@ namespace Nekki.Vector.Core.Location
             bc.isTrigger = true;
 
             UnityObject.name = _Name;
-        }
-
-        protected override void SerializeData()
-        {
-            if (_UnityObject == null)
-            {
-                CreateObject();
-            }
-            _UnityObject.AddComponent<Xml2PrefabAreaContainer>().Init(TransformationDataRaw, _TypeName, _Name, _X, _Y, _W, _H, Choice);
-            _CachedTransform = _UnityObject.transform;
         }
 
         private void LoadBinaryIfTrick()

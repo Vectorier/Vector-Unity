@@ -6,8 +6,6 @@ using UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
-using Utils;
-using UI;
 
 namespace Nekki.Vector.GUI.Scenes.Main.Screens
 {
@@ -136,7 +134,7 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
         {
             if (UserDataManager.Instance.MainData.GetCoins() < item.Price)
             {
-                Scene<MainScene>.Current.GetDialog<BuyCoinsDialog>().Show(item.Price);
+                Scene<MainScene>.Current.GetDialog<NotEnoughCoinsDialog>().Show(item.Price);
                 return;
             }
 

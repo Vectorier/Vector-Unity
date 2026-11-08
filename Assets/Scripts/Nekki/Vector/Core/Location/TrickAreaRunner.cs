@@ -8,10 +8,6 @@ namespace Nekki.Vector.Core.Location
     {
         private const float ExpansionWidthRatio = 1f;
 
-        private readonly float _originalWidth;
-
-        private bool _wasExpanded;
-
         private readonly XmlNode _node;
 
         public static TrickAreaRunner Current;
@@ -35,27 +31,12 @@ namespace Nekki.Vector.Core.Location
         {
             _itemName = itemName;
             _score = score;
-            _originalWidth = width;
-            if (Xml2PrefabRoot.Serialize)
-            {
-                _isActive = true;
-            }
-            else
-            {
-                _isActive = Game.Instance.Snail ? true : Game.IsTrickBought(_itemName);
-            }
-        }
-
-        public override void Generate(GameObject existRunner)
-        {
-            base.Generate(existRunner);
-            _content = _UnityObject.GetComponent<TrickGO>();
-            _content.Init(_itemName, _isActive, _W, _H);
+            _isActive = Game.IsTrickBought(_itemName);
         }
 
         protected override void GenerateObject()
         {
-            var obj = Resources.Load<GameObject>("LevelContent/Prefabs/Trick");
+            var obj = Resources.Load<GameObject>("Prefabs/Gameplay/Trick");
             obj = Object.Instantiate(obj);
             _UnityObject = obj;
             _CachedTransform = obj.transform;
@@ -71,18 +52,12 @@ namespace Nekki.Vector.Core.Location
             _content.Init(_itemName, _isActive, _W, _H);
         }
 
-        public override void InitRunner(Point point, bool serialize = false)
+        public override void InitRunner(Point point)
         {
-            base.InitRunner(point, serialize);
+            base.InitRunner(point);
             UpdateUnityObjectPosition(Position);
 
             _DefautPosition.Set(Position);
-        }
-
-        protected override void SerializeData()
-        {
-            _UnityObject.AddComponent<Xml2PrefabTrickAreaContainer>().Init(TransformationDataRaw, _TypeName, _Name, _X, _Y, _W, _H, _itemName, _score, Choice);
-            _CachedTransform = _UnityObject.transform;
         }
 
         public override void Activate(ModelHuman model)
@@ -124,38 +99,18 @@ namespace Nekki.Vector.Core.Location
             base.Reset();
             UpdateUnityObjectPosition(Position);
             Current = null;
-            _isActive = Game.Instance.Snail ? true : Game.IsTrickBought(_itemName);
+            _isActive = Game.IsTrickBought(_itemName);
             _content.Init(_itemName, _isActive, _W, _H);
-            _wasExpanded = false;
         }
 
         public void Refresh()
         {
             if (!_isActive)
             {
-                _isActive = Game.Instance.Snail ? true : Game.IsTrickBought(_itemName);
+                _isActive = Game.IsTrickBought(_itemName);
                 _content.Init(_itemName, _isActive, _W, _H);
             }
         }
 
-        public void ExpandTrickAreaOnce(int sign)
-        {
-            //if (!_wasExpanded)
-            //{
-            //    if (sign < 0)
-            //    {
-            //        _Point2.X += _originalWidth;
-            //        _Point3.X += _originalWidth;
-            //    }
-            //    else
-            //    {
-            //        _Point1.X -= _originalWidth;
-            //        _Point4.X -= _originalWidth;
-            //    }
-
-            //    _rectangle.Set((float)_Point1.X, (float)_Point1.Y, (float)(_Point2.X - _Point1.X), (float)(_Point4.Y - _Point1.Y));
-            //    _wasExpanded = true;
-            //}
-        }
     }
 }

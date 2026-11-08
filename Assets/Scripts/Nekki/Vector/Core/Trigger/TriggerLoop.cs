@@ -7,8 +7,6 @@ namespace Nekki.Vector.Core.Trigger
 {
 	public class TriggerLoop
 	{
-		private bool _IsRender;
-
 		private string _Name;
 
 		private TriggerRunner _Parent;
@@ -30,7 +28,6 @@ namespace Nekki.Vector.Core.Trigger
 		private TriggerLoop(XmlNode p_node, TriggerRunner p_parent)
 		{
 			_Name = p_node.Attributes["Name"].ParseString(string.Empty);
-			_IsRender = true;
 			_Parent = p_parent;
             ParseEvent(p_node["Events"]);
             TriggerCondition.ParseConditions(p_node["Conditions"], this, _Conditions);

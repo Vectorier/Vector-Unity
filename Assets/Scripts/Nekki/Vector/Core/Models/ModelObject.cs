@@ -317,15 +317,6 @@ namespace Nekki.Vector.Core.Models
                 DetectorHorizontalNode.IsDetector = false;
                 DetectorHorizontalLine = new DetectorLine(DetectorHorizontalNode, DetectorLine.DetectorType.Horizontal);
                 DetectorHorizontalLine.Layer = _Container;
-
-                if (Game.Instance.SnailSett.ShowDetectors)
-                {
-                    var render = new DetectorRender();
-                    render.Layer = _Container;
-                    render.gObject.SetActive(true);
-                    render.Color = Color.red;
-                    render.Add(DetectorHorizontalLine.Start);
-                }
             }
             if (DetectorVerticalNode == null)
             {
@@ -336,15 +327,6 @@ namespace Nekki.Vector.Core.Models
                 DetectorVerticalNode.IsDetector = false;
                 DetectorVerticalLine = new DetectorLine(DetectorVerticalNode, DetectorLine.DetectorType.Vertical);
                 DetectorVerticalLine.Layer = _Container;
-
-                if (Game.Instance.SnailSett.ShowDetectors)
-                {
-                    var render = new DetectorRender();
-                    render.Layer = _Container;
-                    render.gObject.SetActive(true);
-                    render.Color = Color.red;
-                    render.Add(DetectorVerticalLine.Start);
-                }
             }
             CenterOfMassNode = GetNode("COM");
             ToeRight = GetNode("NToe_1");

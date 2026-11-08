@@ -1,5 +1,4 @@
 using Nekki.Vector.Core.Animation;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -27,11 +26,6 @@ namespace Nekki.Vector.Core.Location
 				return;	
 			}
 			Reaction = AnimationLoader.ParseReaction(_animations.Split('|'));
-		}
-
-		protected override void SerializeData()
-		{
-			_UnityObject.AddComponent<Xml2PrefabSpawnContainer>().Init(_DefautPosition.X, _DefautPosition.Y, _Name, _animations, TransformationDataRaw, Choice);
 		}
 
 		public override bool Render()

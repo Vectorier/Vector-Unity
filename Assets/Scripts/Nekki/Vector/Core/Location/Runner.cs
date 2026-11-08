@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Xml;
 using Nekki.Vector.Core.Transformation;
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -40,13 +39,11 @@ namespace Nekki.Vector.Core.Location
 
         protected List<MoveTransform> _ActiveMoveSystem;
 
-        public BaseElements ParentElements;
+        public Elements ParentElements;
 
         public Vector3d TweenPosition = new Vector3d();
 
-        protected string TransformationDataRaw;
 
-        private ChoiceContainer _choice;
 
         public virtual GameObject UnityObject => _UnityObject;
 
@@ -166,7 +163,6 @@ namespace Nekki.Vector.Core.Location
 
         public List<TransformSystem> TransformationData => _TransformationData;
 
-        public ChoiceContainer Choice => _choice;
 
         public Runner(float X, float Y)
         {
@@ -177,22 +173,6 @@ namespace Nekki.Vector.Core.Location
         public virtual void Generate()
         {
             GenerateObject();
-            IsInitialized = true;
-        }
-
-        public virtual void Generate(GameObject existRunner)
-        {
-            if (existRunner == null)
-            {
-                return;
-            }
-            _UnityObject = existRunner;
-            _CachedTransform = _UnityObject.transform;
-            _UnityObject.transform.localPosition = new Vector3(_cahedPosition.X, _cahedPosition.Y, _cahedPosition.Z);
-            if (_Layer != null)
-            {
-                _UnityObject.transform.SetParent(_Layer.transform);
-            }
             IsInitialized = true;
         }
 
@@ -216,25 +196,9 @@ namespace Nekki.Vector.Core.Location
             }
         }
 
-        public void SetVariant(ChoiceContainer choice)
+        public virtual void InitRunner(Point point)
         {
-            if (_choice != null)
-            {
-                Debug.LogError("OVERRIDE");
-            }
-            _choice = choice;
-        }
-
-        public virtual void InitRunner(Point point, bool serialize = false)
-        {
-            if (serialize)
-            {
-                SerializeData();
-            }
-            if (!Xml2PrefabRoot.Serialize)
-            {
-                Move(point);
-            }
+            Move(point);
             if (_CachedTransform != null)
             {
                 _DefautPosition.Set(_CachedTransform.localPosition);
@@ -299,30 +263,7 @@ namespace Nekki.Vector.Core.Location
         {
             if (node != null)
             {
-                TransformationDataRaw = node.OuterXml;
                 ParseTransformation(node["Dynamic"]);
-            }
-        }
-
-        public void SetXmlListSerialized(XmlNode node)
-        {
-            if (node != null)
-            {
-                foreach (XmlNode child in node.ChildNodes)
-                {
-                    if (child.Name == "Dynamic")
-                    {
-                        ParseTransformation(child);
-                    }
-                }
-            }
-        }
-
-        public void ParseMisc(XmlNode node)
-        {
-            if (node != null)
-            {
-
             }
         }
 
@@ -396,8 +337,5 @@ namespace Nekki.Vector.Core.Location
             _CachedTransform.localEulerAngles = localEulerAngles;
         }
 
-        protected virtual void SerializeData()
-        {
-        }
     }
 }

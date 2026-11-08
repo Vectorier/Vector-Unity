@@ -1,5 +1,4 @@
 using UnityEngine;
-using UI.InputControllers;
 
 namespace UI
 {
@@ -10,7 +9,6 @@ namespace UI
         protected bool _IsInited, _IsReleased;
         public static T Current => _Current;
         public Canvas Canvas { get; private set; }
-        public KeyboardController KeyboardController { get; private set; }
 
         protected virtual void Init()
         {
@@ -26,7 +24,6 @@ namespace UI
         {
             _Current = (T)this;
             Canvas = GetComponent<Canvas>();
-            KeyboardController = GetComponent<KeyboardController>();
             base.Awake();
             Init();
         }

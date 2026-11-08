@@ -39,8 +39,6 @@ namespace Nekki.Vector.Core.Models
 
         private float _TimeOut;
 
-        private float _TimeKill = 120;
-
         private float _LiveTime;
 
         private ControllerStatistics _controllerStatistics;
@@ -52,8 +50,6 @@ namespace Nekki.Vector.Core.Models
         public Vector3d _VelocityQuadPrevious = new Vector3d();
 
         private SpawnRunner _Respawn;
-
-        private bool _IsArrest;
 
         public Rectangle _CollisionBox = new Rectangle();
 
@@ -592,7 +588,6 @@ namespace Nekki.Vector.Core.Models
             _DelayReaction = null;
             _isDeath = false;
             _LiveTime = _userData.LiveTime;
-            _IsArrest = false;
             _ModelObject.IsVisible = false;
             IsEnabled = false;
             _VelocityQuadCurrent.Reset();

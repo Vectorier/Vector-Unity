@@ -1,4 +1,3 @@
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
@@ -9,9 +8,5 @@ namespace Nekki.Vector.Core.Location
 			_TypeClass = RunnerType.Camera;
 		}
 
-		protected override void SerializeData()
-		{
-			_UnityObject.AddComponent<Xml2PrefabCameraContainer>().Init(_DefautPosition.X, _DefautPosition.Y, _Name, _animations, TransformationDataRaw, Choice);
-		}
 	}
 }

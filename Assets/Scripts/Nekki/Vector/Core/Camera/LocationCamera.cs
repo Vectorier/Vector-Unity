@@ -158,7 +158,7 @@ namespace Nekki.Vector.Core.Camera
             _Node = new CameraNode(new ModelNode(p_position));
         }
 
-		public void Layers(BaseSets p_sets)
+		public void Layers(Sets p_sets)
 		{
 			foreach (var container in p_sets.Containers.Values)
 			{

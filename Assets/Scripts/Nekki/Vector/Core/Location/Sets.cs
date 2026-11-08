@@ -3,31 +3,123 @@ using System.Globalization;
 using System.Linq;
 using System.Xml;
 using Core._Common;
-using Nekki.Vector.Core.Location.LevelCreation;
-using Nekki.Vector.Core.Location.Serialized;
+using Nekki.Vector.Core.Location.Animation;
+using Nekki.Vector.Core.User;
 using Nekki.Vector.Core.Visual;
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
-    public class Sets : BaseSets
+    /// <summary>
+    /// Everything a level XML builds: its object tree, runners grouped by type, layer containers,
+    /// choices, models and music. Built once per level from the XML document.
+    /// </summary>
+    public class Sets
     {
-        private List<XmlNode> _XmlObjects = new List<XmlNode>();
+        private readonly Dictionary<string, string> _choices = new Dictionary<string, string>();
 
-        private List<XmlNode> _xmlBuilds = new List<XmlNode>();
+        private readonly Dictionary<float, VisualContainer> _containers = new Dictionary<float, VisualContainer>();
 
-        private HashSet<string> _filesBuilds = new HashSet<string>();
+        private readonly List<Runner> _allRunners = new List<Runner>();
 
-        private HashSet<string> _filesObjects = new HashSet<string>();
+        private readonly List<UserData> _userData = new List<UserData>();
 
-        private XmlDocument _document;
+        private readonly List<ObjectRunner> _objects = new List<ObjectRunner>();
+
+        private readonly List<XmlNode> _xmlObjects = new List<XmlNode>();
+
+        private readonly List<XmlNode> _xmlBuilds = new List<XmlNode>();
+
+        private readonly HashSet<string> _filesBuilds = new HashSet<string>();
+
+        private readonly HashSet<string> _filesObjects = new HashSet<string>();
+
+        private readonly XmlDocument _document;
+
+        private Dictionary<string, XmlNode> _objectsNodes = new Dictionary<string, XmlNode>();
+
+        public readonly List<VisualRunner> Visuals = new List<VisualRunner>();
+
+        public readonly List<PlatformRunner> Platforms = new List<PlatformRunner>();
+
+        public readonly List<TriggerRunner> Triggers = new List<TriggerRunner>();
+
+        public readonly List<AreaRunner> Areas = new List<AreaRunner>();
+
+        public readonly List<AnimationRunner> Animations = new List<AnimationRunner>();
+
+        public readonly List<ParticleRunner> Particles = new List<ParticleRunner>();
+
+        public readonly List<ItemRunner> Items = new List<ItemRunner>();
+
+        public readonly List<TrapezoidRunner> Trapezoids = new List<TrapezoidRunner>();
+
+        public readonly List<CameraRunner> Cameras = new List<CameraRunner>();
+
+        public readonly List<SpawnRunner> Spawns = new List<SpawnRunner>();
+
+        /// <summary>Solid geometry (platforms and trapezoids).</summary>
+        public readonly List<QuadRunner> Quads = new List<QuadRunner>();
+
+        /// <summary>Solid geometry plus triggers and areas, used for the spatial grid.</summary>
+        public readonly List<QuadRunner> QuadsAll = new List<QuadRunner>();
+
+        public readonly List<PrimitiveRunner> Primitives = new List<PrimitiveRunner>();
+
+        public static Sets Current { get; private set; }
+
+        public Dictionary<float, VisualContainer> Containers => _containers;
+
+        public List<Runner> AllRunners => _allRunners;
+
+        public int TotalCoins { get; private set; }
+
+        public List<UserData> UserData => _userData;
+
+        public string Music { get; private set; }
+
+        public int totalPoints
+        {
+            get
+            {
+                int points = 0;
+                foreach (var area in Areas)
+                {
+                    if (area is TrickAreaRunner trick)
+                    {
+                        points += trick.score;
+                    }
+                }
+                foreach (var item in Items)
+                {
+                    if (item is ItemScoreRunner scoreRunner)
+                    {
+                        points += scoreRunner.score;
+                    }
+                }
+                return points;
+            }
+        }
+
+        public int totalTricks => Areas.Count(area => area is TrickAreaRunner);
+
+        public int totalBonus => Items.Count(item => item.Type == 0);
 
         public Sets(XmlDocument document)
         {
             Current = this;
             _document = document;
             LoadLevel();
+        }
+
+        public static XmlNode ObjectNode(string name)
+        {
+            if (Current != null && Current._objectsNodes != null && Current._objectsNodes.TryGetValue(name, out var node))
+            {
+                return node;
+            }
+            Debug.LogError("Object not found: " + name);
+            return null;
         }
 
         private void LoadLevel()
@@ -37,13 +129,14 @@ namespace Nekki.Vector.Core.Location
             {
                 foreach (XmlNode set in root["Sets"])
                 {
+                    var fileName = set.Attributes["FileName"].Value;
                     if (set.Name == "City")
                     {
-                        _filesBuilds.Add(set.Attributes["FileName"].Value);
+                        _filesBuilds.Add(fileName);
                     }
                     else
                     {
-                        _filesObjects.Add(set.Attributes["FileName"].Value);
+                        _filesObjects.Add(fileName);
                     }
                 }
             }
@@ -56,17 +149,21 @@ namespace Nekki.Vector.Core.Location
         {
             foreach (var file in _filesBuilds)
             {
-                var document = XmlUtils.OpenXMLDocument(VectorPaths.XmlRoot, file);
-                if (document["Root"] != null && document["Root"]["Objects"] != null)
+                var root = XmlUtils.OpenXMLDocument(VectorPaths.XmlRoot, file)?["Root"];
+                if (root == null)
                 {
-                    _xmlBuilds.Add(document["Root"]["Objects"]);
+                    Debug.LogError("Empty node from file \"" + file + "\"!");
+                    continue;
                 }
-                if (document["Root"] != null && document["Root"]["Sets"] != null)
+                if (root["Objects"] != null)
                 {
-                    foreach (XmlNode set in document["Root"]["Sets"])
+                    _xmlBuilds.Add(root["Objects"]);
+                }
+                if (root["Sets"] != null)
+                {
+                    foreach (XmlNode set in root["Sets"])
                     {
-                        if (!_filesObjects.Contains(set.Attributes["FileName"].Value))
-                            _filesObjects.Add(set.Attributes["FileName"].Value);
+                        _filesObjects.Add(set.Attributes["FileName"].Value);
                     }
                 }
             }
@@ -76,153 +173,154 @@ namespace Nekki.Vector.Core.Location
         {
             foreach (var file in _filesObjects)
             {
-                var document = XmlUtils.OpenXMLDocument(VectorPaths.XmlRoot, file);
-                var root = document["Root"];
+                var root = XmlUtils.OpenXMLDocument(VectorPaths.XmlRoot, file)?["Root"];
                 if (root == null)
                 {
                     Debug.LogError("Empty node from file \"" + file + "\"!");
                     continue;
                 }
-                _XmlObjects.Add(root["Objects"]);
+                _xmlObjects.Add(root["Objects"]);
             }
         }
 
         private void Parse()
         {
-            _ObjectsNodes = new Dictionary<string, XmlNode>();
             ParseChoices(_document["Root"]["Choises"]);
-            ParseObjects();
-            ParseBuilds();
-            ParseLevel();
-            _ObjectsNodes = null;
-        }
-
-        public void ParseObjects()
-        {
-            foreach (XmlNode node in _XmlObjects)
+            foreach (XmlNode node in _xmlObjects)
             {
                 foreach (XmlNode obj in node)
                 {
                     if (obj.Attributes["Name"] != null)
-                        _ObjectsNodes[obj.Attributes["Name"].Value] = obj;
+                        _objectsNodes[obj.Attributes["Name"].Value] = obj;
                 }
-
             }
-        }
-
-        public void ParseBuilds()
-        {
             foreach (XmlNode node in _xmlBuilds)
             {
                 foreach (XmlNode build in node)
                 {
-                    _ObjectsNodes[build.Attributes["Name"].Value] = build;
+                    _objectsNodes[build.Attributes["Name"].Value] = build;
                 }
             }
-
+            ParseLevel();
+            _objectsNodes = null;
         }
 
-        public void ParseLevel()
+        private void ParseChoices(XmlNode nodes)
+        {
+            if (nodes != null)
+            {
+                foreach (XmlNode node in nodes)
+                {
+                    _choices[node.Attributes["Name"].Value] = node.Attributes["Variant"].Value;
+                }
+            }
+            _choices["AITriggers"] = LevelMainController.IsHunterMode ? "HunterMode" : "CommonMode";
+        }
+
+        private void ParseLevel()
         {
             var root = _document["Root"];
             TotalCoins = root["Coins"].Attributes["Value"].ParseInt();
-            ParseModels(root);
-            AddMusics(root["Music"]);
+            ParseModels(root.ChildNodes.Cast<XmlNode>().Where(node => node.Name == "Models"));
+            Music = root["Music"].Attributes["Name"].Value;
             CreateObjects();
-            GetElements(_Objects);
-            InitRunners();
-            InitTriggers();
-            InitParticles();
-            InitAnimations();
-            InitPrimitives();
-            InitAreas();
-            InitVisual();
+            CollectElements(_objects);
+
+            foreach (var trigger in Triggers) trigger.Init();
+            foreach (var particle in Particles) particle.Init();
+            foreach (var animation in Animations) animation.Init();
+            foreach (var primitive in Primitives) primitive.Load();
+            foreach (var visual in Visuals) visual.Init();
         }
 
-        protected void ParseModels(XmlNode nodes)
+        private void ParseModels(IEnumerable<XmlNode> nodes)
         {
-            ParseModels(nodes.ChildNodes.Cast<XmlNode>().Where(node => node.Name == "Models"));
+            foreach (XmlNode node in nodes)
+            {
+                // Matches the original game: an unconditional Models group ends the search.
+                if (node.Attributes["Choice"] == null)
+                {
+                    AddModels(node);
+                    return;
+                }
+                if (_choices.TryGetValue(node.Attributes["Choice"].Value, out var variant) &&
+                    variant == node.Attributes["Variant"].Value)
+                {
+                    AddModels(node);
+                }
+            }
         }
 
-        public void AddMusics(XmlNode node)
+        private void AddModels(XmlNode models)
         {
-            _music = node.Attributes["Name"].Value;
+            foreach (XmlNode node in models.ChildNodes)
+            {
+                _userData.Add(Nekki.Vector.Core.User.UserData.FromXml(node));
+            }
         }
 
-        public void CreateObjects()
+        private void CreateObjects()
         {
-            XmlNode root = _document["Root"]["Track"];
-            List<float> factors = new List<float>();
-            GameObject levelObject = new GameObject("Level_root_object");
+            XmlNode track = _document["Root"]["Track"];
+            var factors = new List<float>();
+            var levelObject = new GameObject("Level_root_object");
             LevelMainController.current.LevelObject = levelObject;
-            levelObject.transform.position = Vector3.zero;
-            levelObject.transform.localScale = Vector3.one;
-            foreach (XmlNode xmlNode in root)
+            foreach (XmlNode xmlNode in track)
             {
                 if (xmlNode.Attributes["Factor"] != null)
                 {
-                    factors.Add(float.Parse(xmlNode.Attributes["Factor"].Value, CultureInfo.InvariantCulture.NumberFormat));
+                    factors.Add(float.Parse(xmlNode.Attributes["Factor"].Value, CultureInfo.InvariantCulture));
                 }
             }
             factors.Sort();
-            uint num = 0;
-            for (int i = 0; i < root.ChildNodes.Count; i++)
+
+            uint index = 0;
+            foreach (XmlNode childNode in track)
             {
-                var childNode = root.ChildNodes[i];
-                BaseObjectRunner objectRunner = null;
-                string name = string.Empty;
-                if (childNode.Attributes["Name"] != null)
+                var objectRunner = new ObjectRunner(index, null);
+                index += objectRunner.Parse(childNode, null, _choices);
+                objectRunner.Init();
+                _objects.Add(objectRunner);
+
+                if (!_containers.TryGetValue(objectRunner.Factor, out var visualContainer))
                 {
-                    name = childNode.Attributes["Name"].Value;
-                }
-                if (!Xml2PrefabRoot.UseOnlyXML)
-                {
-                    var obj = Xml2PrefabUtils.LoadPrefab(name);
-                    if (obj == null)
-                    {
-                        objectRunner = new ObjectRunner(num, null);
-                        num += (objectRunner as ObjectRunner).Parse(childNode, null, _ChoisesDictionary);
-                        objectRunner.Init();
-                    }
-                    else
-                    {
-                        var container = obj.GetComponent<Xml2PrefabObjectRunnerContainer>();
-                        objectRunner = new SerializedObjectRunner(num, null);
-                        num += (objectRunner as SerializedObjectRunner).Parse(container, _ChoisesDictionary);
-                        objectRunner.Init();
-                    }
-                }
-                else
-                {
-                    objectRunner = new ObjectRunner(num, null);
-                    num += (objectRunner as ObjectRunner).Parse(childNode, null, _ChoisesDictionary);
-                    objectRunner.Init();
-                }
-                _Objects.Add(objectRunner);
-                VisualContainer visualContainer = null;
-                if (!_Containers.ContainsKey(objectRunner.Factor))
-                {
-                    var index = factors.IndexOf(objectRunner.Factor);
-                    visualContainer = new VisualContainer(objectRunner.Factor, (factors.Count - index) * 10, index);
+                    var factorIndex = factors.IndexOf(objectRunner.Factor);
+                    visualContainer = new VisualContainer(objectRunner.Factor, (factors.Count - factorIndex) * 10, factorIndex);
                     visualContainer.Object.transform.SetParent(levelObject.transform);
-                    _Containers[objectRunner.Factor] = visualContainer;
-                }
-                else
-                {
-                    visualContainer = _Containers[objectRunner.Factor];
+                    _containers[objectRunner.Factor] = visualContainer;
                 }
                 objectRunner.SetLayer(visualContainer.Object);
             }
         }
 
-        public static XmlNode ObjectNode(string name)
+        private void CollectElements(List<ObjectRunner> objectRunners)
         {
-            if (Current != null && Current._ObjectsNodes.ContainsKey(name))
+            foreach (var objectRunner in objectRunners)
             {
-                return Current._ObjectsNodes[name];
+                var elements = objectRunner.Element;
+                _allRunners.AddRange(elements.Runners);
+                Visuals.AddRange(elements.Visuals);
+                Platforms.AddRange(elements.Platforms);
+                Triggers.AddRange(elements.Triggers);
+                Areas.AddRange(elements.Areas);
+                Spawns.AddRange(elements.Spawns);
+                Cameras.AddRange(elements.Cameras);
+                Trapezoids.AddRange(elements.Trapezoids);
+                Primitives.AddRange(elements.Primitives);
+                Animations.AddRange(elements.Animations);
+                Particles.AddRange(elements.Particles);
+                Items.AddRange(elements.Items);
+
+                Quads.AddRange(elements.Platforms);
+                Quads.AddRange(elements.Trapezoids);
+
+                QuadsAll.AddRange(elements.Platforms);
+                QuadsAll.AddRange(elements.Triggers);
+                QuadsAll.AddRange(elements.Areas);
+                QuadsAll.AddRange(elements.Trapezoids);
+
+                CollectElements(objectRunner.Childs);
             }
-            Debug.LogError("Object not find: " + name);
-            return null;
         }
     }
 }

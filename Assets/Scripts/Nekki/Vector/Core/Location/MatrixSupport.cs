@@ -6,8 +6,6 @@ namespace Nekki.Vector.Core.Location
 {
     public abstract class MatrixSupport : Runner
     {
-        private bool _IsSerialized;
-
         protected GameObject _Support;
 
         protected Matrix4x4 _Transformation = Matrix4x4.identity;
@@ -43,20 +41,6 @@ namespace Nekki.Vector.Core.Location
             }
         }
 
-        public override void Generate(GameObject existRunner)
-        {
-            base.Generate(existRunner);
-            if (_UnityObject.transform.childCount > 0)
-            {
-                var support = _UnityObject.transform.GetChild(0);
-                if (support != null && support.name == "Support")
-                {
-                    _Support = support.gameObject;
-                    _IsSerialized = true;
-                }
-            }
-        }
-
         protected override void GenerateObject()
         {
             base.GenerateObject();
@@ -85,7 +69,7 @@ namespace Nekki.Vector.Core.Location
 
         protected virtual void Transform()
         {
-            if (_Support != null && !_IsSerialized)
+            if (_Support != null)
             {
                 AffineDecomposition affineDecomposition = new AffineDecomposition(_Transformation);
                 _Support.transform.localScale = new Vector3(affineDecomposition.ScaleX1, affineDecomposition.ScaleY1, 1f);

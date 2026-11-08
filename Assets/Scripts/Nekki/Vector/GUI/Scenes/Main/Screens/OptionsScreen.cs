@@ -21,6 +21,8 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
 
         [SerializeField] Text VsyncText;
 
+        [SerializeField] Text AntiAliasingText;
+
         protected override void OnActivated()
         {
             base.OnActivated();
@@ -28,7 +30,8 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
             ResolutionText.text = ResolutionManager.Instance.CurrentResolution.width + "x" +
                                   ResolutionManager.Instance.CurrentResolution.height;
             FullScreenText.text = ResolutionManager.Instance.GetFullScreenModeName();
-            VsyncText.text = QualitySettings.vSyncCount == 0 ? "Off" : "On";
+            VsyncText.text = GraphicsOptions.VSync ? "On" : "Off";
+            AntiAliasingText.text = GraphicsOptions.GetAntiAliasingName(GraphicsOptions.AntiAliasing);
 
             bool music = UserDataManager.Instance.Options.Music;
             bool sound = UserDataManager.Instance.Options.Sound;
@@ -70,9 +73,14 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
 
         public void OnVsyncTap()
         {
-            QualitySettings.vSyncCount = QualitySettings.vSyncCount == 0 ? 1 : 0;
-            VsyncText.text = QualitySettings.vSyncCount == 0 ? "Off" : "On";
-            PlayerPrefs.SetInt("VSyncCount", QualitySettings.vSyncCount);
+            GraphicsOptions.SetVSync(!GraphicsOptions.VSync);
+            VsyncText.text = GraphicsOptions.VSync ? "On" : "Off";
+        }
+
+        public void OnAntiAliasingTap()
+        {
+            GraphicsOptions.SetAntiAliasing(GraphicsOptions.NextAntiAliasing());
+            AntiAliasingText.text = GraphicsOptions.GetAntiAliasingName(GraphicsOptions.AntiAliasing);
         }
 
         public void OnMusicTap(bool isOn)

@@ -2,20 +2,49 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using Nekki.Vector.Core.Location.Animation;
-using Nekki.Vector.Core.Location.LevelCreation;
 using Nekki.Vector.Core.Models;
 using Nekki.Vector.Core.Utilites;
 using UnityEngine;
-using Xml2Prefab;
 
 namespace Nekki.Vector.Core.Location
 {
-    public class Elements : BaseElements
+    /// <summary>The runners (images, platforms, triggers, ...) defined directly inside one object's Content node.</summary>
+    public class Elements
     {
+        private readonly ObjectRunner _parent;
 
-        public Elements(BaseObjectRunner parent, uint index)
-            : base(parent, index)
+        public readonly List<VisualRunner> Visuals = new List<VisualRunner>();
+
+        public readonly List<PlatformRunner> Platforms = new List<PlatformRunner>();
+
+        public readonly List<TriggerRunner> Triggers = new List<TriggerRunner>();
+
+        public readonly List<AreaRunner> Areas = new List<AreaRunner>();
+
+        public readonly List<AnimationRunner> Animations = new List<AnimationRunner>();
+
+        public readonly List<ParticleRunner> Particles = new List<ParticleRunner>();
+
+        public readonly List<TrapezoidRunner> Trapezoids = new List<TrapezoidRunner>();
+
+        public readonly List<ItemRunner> Items = new List<ItemRunner>();
+
+        public readonly List<SpawnRunner> Spawns = new List<SpawnRunner>();
+
+        public readonly List<CameraRunner> Cameras = new List<CameraRunner>();
+
+        public readonly List<PrimitiveRunner> Primitives = new List<PrimitiveRunner>();
+
+        public readonly List<Runner> Runners = new List<Runner>();
+
+        public ObjectRunner ParentObject => _parent;
+
+        public uint Index { get; }
+
+        public Elements(ObjectRunner parent, uint index)
         {
+            _parent = parent;
+            Index = index;
         }
 
         public uint Parse(XmlNode mainNode, Dictionary<string, string> choices)
@@ -25,106 +54,107 @@ namespace Nekki.Vector.Core.Location
                 return 0;
             }
             uint num = 0;
-            for (int i = 0; i < mainNode.ChildNodes.Count; i++)
+            foreach (XmlNode node in mainNode.ChildNodes)
             {
-                XmlNode node = mainNode.ChildNodes[i];
-                ChoiceContainer choice = null;
-                Runner runner = null;
-                if (node["Properties"] != null && node["Properties"]["Static"] != null && node["Properties"]["Static"]["Selection"] != null)
+                var selection = node["Properties"]?["Static"]?["Selection"];
+                if (selection != null &&
+                    (!choices.TryGetValue(selection.Attributes["Choice"].Value, out var variant) ||
+                     variant != selection.Attributes["Variant"].Value))
                 {
-                    var selection = node["Properties"]["Static"]["Selection"];
-                    choice = new ChoiceContainer(selection.Attributes["Choice"].Value, selection.Attributes["Variant"].Value);
-                    if (!Xml2PrefabRoot.Serialize)
-                    {
-                        if (choices[choice.Name] != choice.Variant)
-                        {
-                            continue;
-                        }
-                    }
+                    continue;
                 }
 
+                Runner runner = null;
                 switch (node.Name)
                 {
                     case "Object":
-                        num += (_Parent as ObjectRunner).CreateChild(node, (num + Index) - 1, choices);
+                        num += _parent.CreateChild(node, (num + Index) - 1, choices);
                         continue;
                     case "Image":
-                        runner = CreateVisual(node);
-                        if (runner != null)
-                        {
-                            _Visuals.Add((VisualRunner)runner);
-                            num++;
-                        }
+                        runner = Add(Visuals, CreateVisual(node));
+                        if (runner != null) num++;
                         break;
                     case "Trigger":
-                        runner = CreateTrigger(node);
-                        if (runner != null)
-                            _Triggers.Add((TriggerRunner)runner);
+                        runner = Add(Triggers, CreateTrigger(node));
                         break;
                     case "Area":
-                        runner = CreateArea(node);
-                        if (runner != null)
-                            _Areas.Add((AreaRunner)runner);
+                        runner = Add(Areas, CreateArea(node));
                         break;
                     case "Spawn":
-                        runner = CreateSpawn(node);
-                        if (runner != null)
-                            _Spawns.Add((SpawnRunner)runner);
+                        runner = Add(Spawns, CreateSpawn(node));
                         break;
                     case "Camera":
-                        runner = CreateCamera(node);
-                        if (runner != null)
-                            _Cameras.Add((CameraRunner)runner);
+                        runner = Add(Cameras, CreateCamera(node));
                         break;
                     case "Platform":
-                        runner = CreatePlatform(node);
-                        if (runner != null)
-                            _Platforms.Add((PlatformRunner)runner);
+                        runner = Add(Platforms, CreatePlatform(node));
                         break;
                     case "Trapezoid":
-                        runner = CreateTrapezoid(node);
-                        if (runner != null)
-                            _Trapezoids.Add((TrapezoidRunner)runner);
+                        runner = Add(Trapezoids, CreateTrapezoid(node));
                         break;
                     case "Item":
-                        runner = CreateItem(node);
-                        if (runner != null)
-                            _Items.Add((ItemRunner)runner);
+                        runner = Add(Items, CreateItem(node));
                         break;
                     case "Model":
-                        runner = CreatePrimitive(node);
-                        if (runner != null)
-                            _Primitives.Add((PrimitiveRunner)runner);
+                        runner = Add(Primitives, CreatePrimitive(node));
                         break;
                     case "Animation":
-                        runner = CreateAnimation(node);
-                        if (runner != null)
-                        {
-                            _Animations.Add((AnimationRunner)runner);
-                            num++;
-                        }
+                        runner = Add(Animations, CreateAnimation(node));
+                        if (runner != null) num++;
                         break;
                     case "Particle":
-                        runner = CreateParticle(node);
-                        if (runner != null)
-                        {
-                            _Particles.Add((ParticleRunner)runner);
-                            num++;
-                        }
+                        runner = Add(Particles, CreateParticle(node));
+                        if (runner != null) num++;
                         break;
                 }
 
                 if (runner != null)
                 {
-                    runner.SetVariant(choice);
-                    _runners.Add(runner);
+                    runner.Layer = _parent.Layer;
+                    runner.SetXmlList(XmlUtils.GetDynamicProperties(node));
+                    Runners.Add(runner);
                     runner.Generate();
-                    _Parent.LayerOrder.Add(runner);
+                    _parent.LayerOrder.Add(runner);
                     runner.Index = num + Index;
                 }
             }
-            Init();
+            AssignParent();
             return num;
+        }
+
+        /// <summary>Moves every runner of <paramref name="element"/> into this one (an object's external definition).</summary>
+        public void CopyFrom(Elements element)
+        {
+            Visuals.AddRange(element.Visuals);
+            Platforms.AddRange(element.Platforms);
+            Triggers.AddRange(element.Triggers);
+            Areas.AddRange(element.Areas);
+            Animations.AddRange(element.Animations);
+            Particles.AddRange(element.Particles);
+            Trapezoids.AddRange(element.Trapezoids);
+            Items.AddRange(element.Items);
+            Cameras.AddRange(element.Cameras);
+            Spawns.AddRange(element.Spawns);
+            Primitives.AddRange(element.Primitives);
+            Runners.AddRange(element.Runners);
+            AssignParent();
+        }
+
+        private void AssignParent()
+        {
+            foreach (var runner in Runners)
+            {
+                runner.ParentElements = this;
+            }
+        }
+
+        private static T Add<T>(List<T> list, T runner) where T : Runner
+        {
+            if (runner != null)
+            {
+                list.Add(runner);
+            }
+            return runner;
         }
 
         private TriggerRunner CreateTrigger(XmlNode Node)
@@ -134,8 +164,6 @@ namespace Nekki.Vector.Core.Location
             var width = Node.Attributes["Width"].ParseFloat();
             var height = Node.Attributes["Height"].ParseFloat();
             var trigger = new TriggerRunner(x, y, width, height, Node);
-            trigger.Layer = _Parent.Layer;
-            trigger.SetXmlList(Xml2PrefabUtils.GetTransformationNode(Node));
             return trigger;
         }
 
@@ -168,8 +196,6 @@ namespace Nekki.Vector.Core.Location
                     area = new AreaRunner(AreaRunner.AreaType.None, x, y, width, height, type, name);
                     break;
             }
-            area.Layer = _Parent.Layer;
-            area.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return area;
         }
 
@@ -205,8 +231,6 @@ namespace Nekki.Vector.Core.Location
                 y += tY;
             }
             var visual = new VisualRunner(type, name, new Pointd(x, y), width, height, color, depth, matrixNode, nativeX, nativeY);
-            visual.Layer = _Parent.Layer;
-            visual.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return visual;
         }
 
@@ -219,8 +243,6 @@ namespace Nekki.Vector.Core.Location
             var height = node.Attributes["Height"].ParseFloat();
             var sticky = node.Attributes["Sticky"].ParseBool(true);
             var platform = new PlatformRunner(name, x, y, width, height, sticky);
-            platform.Layer = _Parent.Layer;
-            platform.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return platform;
         }
 
@@ -235,8 +257,6 @@ namespace Nekki.Vector.Core.Location
             var height1 = node.Attributes["Height1"].ParseFloat();
             var sticky = node.Attributes["Sticky"].ParseBool(true);
             var trapezoid = new TrapezoidRunner(name, type, x, y, width, height, height1, sticky);
-            trapezoid.Layer = _Parent.Layer;
-            trapezoid.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return trapezoid;
         }
 
@@ -257,8 +277,6 @@ namespace Nekki.Vector.Core.Location
                 int score = node.Attributes["Score"].ParseInt();
                 item = new CoinRunner(type, "CoinItem", groupId, score, x, y);
             }
-            item.Layer = _Parent.Layer;
-            item.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return item;
         }
 
@@ -281,8 +299,6 @@ namespace Nekki.Vector.Core.Location
                 primitive = new PrimitiveAnimatedRunner(type, name, Color.black, deltaPosition, impulse, sounds);
                 primitive.Type = ModelType.PrimitiveAnimated;
             }
-            primitive.Layer = _Parent.Layer;
-            primitive.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return primitive;
         }
 
@@ -294,8 +310,6 @@ namespace Nekki.Vector.Core.Location
             var width = node.Attributes["Width"].ParseFloat();
             var height = node.Attributes["Height"].ParseFloat();
             var particle = new ParticleRunner(x, y, width, height, name);
-            particle.Layer = _Parent.Layer;
-            particle.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return particle;
         }
 
@@ -335,8 +349,6 @@ namespace Nekki.Vector.Core.Location
             {
                 animation = new AnimationRunner(x, y, width, height, name, type, scaleX, scaleY, false, 2);
             }
-            animation.Layer = _Parent.Layer;
-            animation.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return animation;
         }
 
@@ -345,8 +357,6 @@ namespace Nekki.Vector.Core.Location
             var x = node.Attributes["X"].ParseFloat();
             var y = node.Attributes["Y"].ParseFloat();
             CameraRunner camera = new CameraRunner(x, y, "", "");
-            camera.Layer = _Parent.Layer;
-            camera.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return camera;
         }
 
@@ -357,8 +367,6 @@ namespace Nekki.Vector.Core.Location
             var animation = node.Attributes["Animation"].ParseString();
             var name = node.Attributes["Name"].ParseString();
             SpawnRunner spawn = new SpawnRunner(x, y, name, animation);
-            spawn.Layer = _Parent.Layer;
-            spawn.SetXmlList(Xml2PrefabUtils.GetTransformationNode(node));
             return spawn;
         }
     }

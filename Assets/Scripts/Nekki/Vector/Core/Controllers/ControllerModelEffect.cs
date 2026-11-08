@@ -198,7 +198,7 @@ namespace Nekki.Vector.Core.Controllers
 
         private AnimationSprite CreateGO(string goName, string animationName, bool isActive = false)
         {
-            var animationSprite = Object.Instantiate(Resources.Load<GameObject>("LevelContent/Prefabs/AnimationSprite")).GetComponent<AnimationSprite>();
+            var animationSprite = Object.Instantiate(Resources.Load<GameObject>("Prefabs/Gameplay/AnimationSprite")).GetComponent<AnimationSprite>();
             FixedRenderInterpolation.Register(animationSprite.transform);
             animationSprite.Init(animationName, null, 0.5f, 0.5f);
             animationSprite.gameObject.SetActive(isActive);

@@ -51,9 +51,6 @@ namespace UI.Dialogs
             if (instances.TryGetValue(typeof(T), out var dialog) && dialog != null) dialog.Dismiss();
         }
 
-        public void TurnOnBlurEffect() => UIBindings.BackgroundEffectChanged?.Invoke(true);
-        public void TurnOffBlurEffect() => UIBindings.BackgroundEffectChanged?.Invoke(false);
-
         protected virtual void OnDestroy()
         {
             if (Current == this) Current = null;
