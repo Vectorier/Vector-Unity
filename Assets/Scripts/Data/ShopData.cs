@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Banzai.Json;
-using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 public class ShopData : BaseUserHolder<ShopData>
 {
@@ -14,20 +14,37 @@ public class ShopData : BaseUserHolder<ShopData>
 
 	public override void ParseData()
 	{
-		if (_userjObject["Items"] == null)
+		_items.Clear();
+		var token = _userjObject["Items"];
+		if (token == null)
 		{
 			return;
 		}
-		var list = JsonConvert.DeserializeObject<List<OwnedItem>>(JsonUtils.AsString(_userjObject["Items"]));
-		foreach (var item in list )
+		if (token.Type == JTokenType.String)
 		{
-			_items[item.id] = item;
+			// Old saves stored a JSON string holding [{ "id", "count", "isEquip" }, ...].
+			foreach (var item in JArray.Parse(token.AsString()))
+			{
+				var id = (string)item["id"];
+				_items[id] = new OwnedItem(id, (int?)item["count"] ?? 0, (bool?)item["isEquip"] ?? false);
+			}
+			return;
+		}
+		foreach (var item in token.Children<JProperty>())
+		{
+			_items[item.Name] = new OwnedItem(item.Name, (int?)item.Value["Count"] ?? 0, (bool?)item.Value["Equipped"] ?? false);
 		}
 	}
 
+	// Saved as "Items": { "<item id>": { "Count": 1, "Equipped": true }, ... }
 	public override void SaveData()
 	{
-		_userjObject["Items"] = JsonConvert.SerializeObject(_items.Values.ToList());
+		var items = new JObject();
+		foreach (var item in _items.Values.OrderBy(i => i.id, StringComparer.Ordinal))
+		{
+			items[item.id] = new JObject { ["Count"] = item.count, ["Equipped"] = item.isEquip };
+		}
+		_userjObject["Items"] = items;
 		UserDataManager.Instance.SaveUserDate();
 		Updated?.Invoke(this);
 	}

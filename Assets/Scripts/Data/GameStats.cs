@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using Banzai.Json;
-using Newtonsoft.Json;
+using System;
+using System.Globalization;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 
 public class GameStats : BaseUserHolder<GameStats>
@@ -11,19 +13,50 @@ public class GameStats : BaseUserHolder<GameStats>
 
     protected override string JSONName => "GameStats";
 
+    // Saved as "TrackStats": { "<track>": { "Points": 700, "Stars": 3, "Time": "00:00:56.85" }, ... }
     public override void ParseData()
     {
-        if (_userjObject["TrackStats"] != null)
+        _trackStats.Clear();
+        var token = _userjObject["TrackStats"];
+        if (token == null)
         {
-            var val = _userjObject["TrackStats"].AsString();
-            _trackStats = JsonConvert.DeserializeObject<Dictionary<string, Record>>(val);
+            return;
+        }
+        if (token.Type == JTokenType.String)
+        {
+            // Old saves stored the records as a JSON string.
+            token = JToken.Parse(token.AsString());
+        }
+        foreach (var track in token.Children<JProperty>())
+        {
+            var value = track.Value;
+            var record = new Record
+            {
+                Points = (int?)value["Points"] ?? 0,
+                Stars = (int?)value["Stars"] ?? 0,
+            };
+            var time = (string)(value["Time"] ?? value["TimeSpan"]);
+            if (!string.IsNullOrEmpty(time) && TimeSpan.TryParse(time, CultureInfo.InvariantCulture, out var timeSpan))
+            {
+                record.TimeSpan = timeSpan;
+            }
+            _trackStats[track.Name] = record;
         }
     }
 
     public override void SaveData()
     {
-        var val = JsonConvert.SerializeObject(_trackStats);
-        _userjObject["TrackStats"] = val;
+        var tracks = new JObject();
+        foreach (var pair in _trackStats.OrderBy(p => p.Key, StringComparer.Ordinal))
+        {
+            tracks[pair.Key] = new JObject
+            {
+                ["Points"] = pair.Value.Points,
+                ["Stars"] = pair.Value.Stars,
+                ["Time"] = pair.Value.TimeSpan.ToString(@"hh\:mm\:ss\.fff", CultureInfo.InvariantCulture),
+            };
+        }
+        _userjObject["TrackStats"] = tracks;
         UserDataManager.Instance.SaveUserDate();
     }
 

@@ -8,7 +8,8 @@ using UnityEngine;
 /// </summary>
 public class UserDataManager : AbstractManager<UserDataManager>
 {
-    private const int Version = 1;
+    /// <summary>2: track stats and shop items are plain nested JSON instead of JSON strings.</summary>
+    private const int Version = 2;
 
     public static readonly string USER_DATA_FOLDER = Application.isMobilePlatform
         ? Application.persistentDataPath
@@ -37,6 +38,7 @@ public class UserDataManager : AbstractManager<UserDataManager>
         Directory.CreateDirectory(USER_DATA_FOLDER);
 
         _userJsonRoot = LoadDataFromFile();
+        RemoveObsoleteKeys(_userJsonRoot);
         MainData = MainData.Create(_userJsonRoot);
         Stats = Stats.Create(_userJsonRoot);
         Options = Options.Create(_userJsonRoot);
@@ -55,6 +57,28 @@ public class UserDataManager : AbstractManager<UserDataManager>
 
         Options.Locale ??= LocalizationManager.Instance.GetSystem();
         Options.Update();
+
+        // Rewrite older saves in the current, hand-editable layout.
+        if ((int?)_userJsonRoot["V"] != Version)
+        {
+            _userJsonRoot["V"] = Version;
+            GameStats.SaveData();
+            ShopData.SaveData();
+        }
+    }
+
+    /// <summary>Drops keys written by older versions of the game that nothing reads any more.</summary>
+    private static void RemoveObsoleteKeys(JObject root)
+    {
+        root.Remove("OldData");
+        (root["MainData"] as JObject)?.Remove("Unlock");
+        if (root["Options"] is JObject options)
+        {
+            foreach (var key in new[] { "GDPR", "CurrentLocaleIndex", "GameRated", "ShowRateGameNextTime" })
+            {
+                options.Remove(key);
+            }
+        }
     }
 
     private static JObject LoadDataFromFile()
