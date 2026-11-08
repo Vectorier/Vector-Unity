@@ -39,20 +39,8 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
             Scene<MainScene>.Current.SwitchScreen<OptionsScreen>();
         }
 
-        public void OnTikTokTap()
-        {
-            Application.OpenURL("https://www.tiktok.com/@vector_the_game");
-        }
 
-        public void OnFacebookTap()
-        {
-            Application.OpenURL("https://m.facebook.com/VectorTheGame");
-        }
 
-        public void OnTwitterTap()
-        {
-            Application.OpenURL("https://mobile.twitter.com/VectorTheGame");
-        }
 
         protected override void BackPress(InputAction.CallbackContext ctx = default)
         {
