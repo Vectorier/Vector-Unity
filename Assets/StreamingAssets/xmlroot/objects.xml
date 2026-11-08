@@ -227,7 +227,7 @@
             </Loop>
           </Content>
         </Trigger>
-        <Animation X="0" Y="0" Width="600" Height="345" ScaleX="1.5" ScaleY="1.5" Type="0" ClassName="paper_v1"/>
+        <Animation X="0" Y="0" Width="600" Height="345" ScaleX="1" ScaleY="1" Type="0" ClassName="paper_v1"/>
       </Content>
     </Object>
     <Object Name="Dust">
@@ -249,7 +249,7 @@
             </Loop>
           </Content>
         </Trigger>
-        <Animation X="0" Y="0" Width="600" Height="345" ScaleX="3" ScaleY="3" Type="0" ClassName="p_dust2"/>
+        <Animation X="0" Y="0" Width="600" Height="345" ScaleX="1" ScaleY="1" Type="0" ClassName="p_dust2"/>
       </Content>
     </Object>
     <Object Name="Stool" Label="Model">
@@ -5956,7 +5956,7 @@
             <Template Name="ModelAnimation"/>
           </Content>
         </Trigger>
-        <Model X="-1055" Y="-1033" Type="1" ClassName="cs_techpark_cs01_main_glider"/>
+        <Model X="-1055" Y="-1033" Type="1" ClassName="cs_techpark_cs01_main_glider_girl"/>
         <Platform X="-1250" Y="-1100" Width="10" Height="10"/>
         <Trigger Name="TriggerCSTechnoCS01Glider" X="-1410" Y="515" Width="500" Height="1000">
           <Content>

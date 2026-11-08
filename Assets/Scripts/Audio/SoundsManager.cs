@@ -10,7 +10,7 @@ public class SoundsManager : MonoBehaviour
     [Header("Audio Sources")]
     [Tooltip("Used as the first SFX channel; additional channels are created at runtime.")]
     public AudioSource AudioSourceMain;              // SFX channel #0 (pooled)
-    public AudioSource AudioSourceBackground;        // Music / Background (single channel)
+    [SerializeField] private AudioSource AudioSourceBackground;     // Music (current track)
 
     [Header("SFX Channel Pool")]
     [Min(1)] public int initialSfxChannels = 11;      // includes AudioSourceMain if assigned
@@ -77,8 +77,9 @@ public class SoundsManager : MonoBehaviour
         }
 
         // Default volumes
-        if (AudioSourceBackground != null)
-            AudioSourceBackground.volume = defaultMusicVolume;
+        _musicLevel = defaultMusicVolume;
+        EnsureMusicSources();
+        ApplyMusicVolume();
         foreach (var s in _sfxSources) s.volume = defaultSfxVolume;
     }
 
@@ -143,26 +144,13 @@ public class SoundsManager : MonoBehaviour
 
     public void SetMusicPause(bool state)
     {
-        if (AudioSourceBackground != null) AudioSourceBackground.mute = state;
+        AudioSourceBackground.mute = state;
+        if (_musicFadeSource != null) _musicFadeSource.mute = state;
     }
 
     public void SetSoundsPause(bool state)
     {
         foreach (var s in _sfxSources) s.mute = state;
-    }
-
-    public void PauseAll(bool state)
-    {
-        if (state)
-        {
-            if (AudioSourceBackground != null) AudioSourceBackground.Pause();
-            foreach (var s in _sfxSources) s.Pause();
-        }
-        else
-        {
-            if (AudioSourceBackground != null) AudioSourceBackground.UnPause();
-            foreach (var s in _sfxSources) s.UnPause();
-        }
     }
 
     public void SetSoundLevel(float value)
@@ -172,37 +160,180 @@ public class SoundsManager : MonoBehaviour
 
     public void SetMusicLevel(float value)
     {
-        if (AudioSourceBackground != null) AudioSourceBackground.volume = value;
+        _musicLevel = value;
+        ApplyMusicVolume();
     }
 
     // ======== Music / Background ========
+    // Two sources: AudioSourceBackground always holds the current track, _musicFadeSource the one fading out
+    // during a crossfade. Each source's volume is the player's music level times its own fade gain. Every
+    // music operation stops the running fade first and starts from the current gains, so calls can interrupt
+    // each other at any time (pause/unpause spam, leaving a level mid-fade, a new track mid-crossfade).
+
+    private AudioSource _musicFadeSource;
+    private float _musicLevel = 1f;
+    private float _musicGain = 1f;
+    private float _fadeSourceGain;
+    private bool _musicPaused;
+    private bool _musicFadingOut;
+    private Coroutine _musicFade;
+    private int _musicRequest;
+
+    private void EnsureMusicSources()
+    {
+        if (_musicFadeSource != null) return;
+        _musicFadeSource = gameObject.AddComponent<AudioSource>();
+        _musicFadeSource.playOnAwake = false;
+        _musicFadeSource.loop = true;
+        _musicFadeSource.spatialBlend = 0f;
+        _musicFadeSource.outputAudioMixerGroup = AudioSourceBackground.outputAudioMixerGroup;
+        _musicFadeSource.mute = AudioSourceBackground.mute;
+    }
+
+    private void ApplyMusicVolume()
+    {
+        AudioSourceBackground.volume = _musicLevel * _musicGain;
+        if (_musicFadeSource != null) _musicFadeSource.volume = _musicLevel * _fadeSourceGain;
+    }
+
+    private void StopMusicFade()
+    {
+        if (_musicFade != null)
+        {
+            StopCoroutine(_musicFade);
+            _musicFade = null;
+        }
+    }
 
     public void StopBackground()
     {
-        if (AudioSourceBackground != null) AudioSourceBackground.Stop();
+        EnsureMusicSources();
+        StopMusicFade();
+        _musicRequest++;
+        _musicPaused = false;
+        _musicFadingOut = false;
+        AudioSourceBackground.Stop();
+        _musicFadeSource.Stop();
     }
 
-    public void PlayBackground(MusicType musicType) => PlayBackground(musicType.ToString());
+    public void PlayBackground(MusicType musicType, float crossfade = 0f) => PlayBackground(musicType.ToString(), crossfade);
 
-    public void PlayBackground(string musicName, bool loop = true)
+    /// <summary>Plays a music track, crossfading from the current one over <paramref name="crossfade"/> seconds.</summary>
+    public void PlayBackground(string musicName, float crossfade = 0f)
     {
-        if (AudioSourceBackground == null)
-        {
-            Debug.LogWarning("Background AudioSource is not assigned.");
-            return;
-        }
-        AudioSourceBackground.Stop();
+        EnsureMusicSources();
+        int request = ++_musicRequest;
         StartCoroutine(ResourcesLoader.LoadMusicClipAsync(musicName, loaded =>
         {
+            if (request != _musicRequest)
+            {
+                return; // a newer music request replaced this one while it was loading
+            }
             if (loaded == null)
             {
                 Debug.LogError("Music clip not found " + musicName);
                 return;
             }
-            AudioSourceBackground.clip = loaded;
-            AudioSourceBackground.loop = loop;
-            AudioSourceBackground.Play();
+            StartTrack(loaded, crossfade);
         }));
+    }
+
+    private void StartTrack(AudioClip clip, float crossfade)
+    {
+        StopMusicFade();
+        bool audible = AudioSourceBackground.isPlaying && !_musicPaused && !_musicFadingOut && _musicGain > 0f;
+        _musicPaused = false;
+        _musicFadingOut = false;
+
+        if (crossfade <= 0f || !audible)
+        {
+            _musicFadeSource.Stop();
+            _fadeSourceGain = 0f;
+        }
+        else
+        {
+            // The current track moves to the fade source and fades out from where it is.
+            (AudioSourceBackground, _musicFadeSource) = (_musicFadeSource, AudioSourceBackground);
+            _fadeSourceGain = _musicGain;
+        }
+
+        AudioSourceBackground.Stop();
+        AudioSourceBackground.clip = clip;
+        AudioSourceBackground.loop = true;
+        _musicGain = crossfade > 0f ? 0f : 1f;
+        ApplyMusicVolume();
+        AudioSourceBackground.Play();
+
+        if (crossfade > 0f)
+        {
+            _musicFade = StartCoroutine(FadeMusic(1f, crossfade, () => _musicFadeSource.Stop()));
+        }
+    }
+
+    /// <summary>
+    /// Fades the music out and pauses it; <see cref="ResumeMusic"/> brings it back. Returns false (and does
+    /// nothing) when there is no playing track to pause.
+    /// </summary>
+    public bool PauseMusic(float fade = 0.25f)
+    {
+        EnsureMusicSources();
+        if (_musicPaused || _musicFadingOut || !AudioSourceBackground.isPlaying) return false;
+        _musicPaused = true;
+        StopMusicFade();
+        _musicFade = StartCoroutine(FadeMusic(0f, fade, () =>
+        {
+            AudioSourceBackground.Pause();
+            _musicFadeSource.Stop();
+        }));
+        return true;
+    }
+
+    /// <summary>Unpauses music paused by <see cref="PauseMusic"/> and fades it back in. Does nothing otherwise.</summary>
+    public void ResumeMusic(float fade = 0.5f)
+    {
+        EnsureMusicSources();
+        if (!_musicPaused) return;
+        _musicPaused = false;
+        StopMusicFade();
+        AudioSourceBackground.UnPause();
+        _musicFade = StartCoroutine(FadeMusic(1f, fade, null));
+    }
+
+    /// <summary>Fades the music out over <paramref name="fade"/> seconds, then stops it.</summary>
+    public void FadeOutMusic(float fade)
+    {
+        EnsureMusicSources();
+        _musicRequest++;
+        _musicPaused = false;
+        _musicFadingOut = true;
+        StopMusicFade();
+        _musicFade = StartCoroutine(FadeMusic(0f, fade, () =>
+        {
+            AudioSourceBackground.Stop();
+            _musicFadeSource.Stop();
+        }));
+    }
+
+    /// <summary>Moves the current track's gain to <paramref name="target"/> while any fading-out track goes to 0.</summary>
+    private IEnumerator FadeMusic(float target, float duration, System.Action onDone)
+    {
+        float startGain = _musicGain;
+        float startFadeGain = _fadeSourceGain;
+        float t = 0f;
+        while (t < duration)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / duration);
+            _musicGain = Mathf.Lerp(startGain, target, k);
+            _fadeSourceGain = Mathf.Lerp(startFadeGain, 0f, k);
+            ApplyMusicVolume();
+            yield return null;
+        }
+        _musicGain = target;
+        _fadeSourceGain = 0f;
+        ApplyMusicVolume();
+        _musicFade = null;
+        onDone?.Invoke();
     }
 
     // ======== SFX: Single / Parallel ========

@@ -114,7 +114,8 @@ namespace UI
 
         protected virtual void OnDeactivated()
         {
-            DisableInputActions(InputController.instance.InputActions);
+            var input = InputController.instance;
+            if (input != null) DisableInputActions(input.InputActions);
         }
 
         protected virtual void SetInputActions(PlayerInputActions actions)

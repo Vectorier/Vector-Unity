@@ -305,8 +305,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 6892795368376219397}
-        m_TargetAssemblyTypeName: Nekki.Vector.GUI.Scenes.Main.Dialogs.BuyItemDialog,
-          Assembly-CSharp
+        m_TargetAssemblyTypeName: Nekki.Vector.GUI.Scenes.Main.Dialogs.BuyItemDialog, Assembly-CSharp
         m_MethodName: OnBuyTap
         m_Mode: 1
         m_Arguments:
@@ -420,7 +419,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 0f1b98f55883494cb83468dbcd0d49ea, type: 3}
     m_FontSize: 60
     m_FontStyle: 1
     m_BestFit: 0
@@ -558,8 +557,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 6892795368376219397}
-        m_TargetAssemblyTypeName: Nekki.Vector.GUI.Scenes.Main.Dialogs.BuyItemDialog,
-          Assembly-CSharp
+        m_TargetAssemblyTypeName: Nekki.Vector.GUI.Scenes.Main.Dialogs.BuyItemDialog, Assembly-CSharp
         m_MethodName: OnCancelTap
         m_Mode: 1
         m_Arguments:
@@ -1936,6 +1934,8 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+  m_MaxWidth: -1
+  m_MaxHeight: -1
 --- !u!1 &6136182419907514142
 GameObject:
   m_ObjectHideFlags: 0

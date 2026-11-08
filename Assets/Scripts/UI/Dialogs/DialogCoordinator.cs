@@ -62,7 +62,7 @@ namespace UI.Dialogs
 
         private static void CaptureInput(BaseDialog dialog)
         {
-            InputController.instance.Disable();
+            InputController.instance?.Disable();
             foreach (var caster in Object.FindObjectsByType<GraphicRaycaster>(FindObjectsInactive.Include))
                 if (caster.gameObject.scene == dialog.gameObject.scene &&
                     (blocker == null || caster.gameObject != blocker) && !IsOwnedCaster(caster))
@@ -185,7 +185,7 @@ namespace UI.Dialogs
                 blocker = null;
             }
 
-            InputController.instance.Enable();
+            InputController.instance?.Enable();
         }
 
         public static void Reset()

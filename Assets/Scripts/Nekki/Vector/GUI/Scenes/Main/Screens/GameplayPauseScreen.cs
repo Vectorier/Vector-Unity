@@ -54,6 +54,7 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
 
         protected override void OnActivated()
         {
+            SoundsManager.Instance.PauseMusic();
             SetInputActions(InputController.instance.InputActions);
             InitItems();
             

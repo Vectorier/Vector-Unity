@@ -116,7 +116,7 @@ namespace Nekki.Vector.Core.Scripts
 
         private void FixedUpdate()
         {
-            if (_isWork)
+            if (_isWork && !GameplayPause.IsPaused)
             {
                 _times += Time.deltaTime;
                 if (1 / _FPS <= _times)

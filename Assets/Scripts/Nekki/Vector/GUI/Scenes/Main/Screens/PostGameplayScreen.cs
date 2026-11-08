@@ -195,7 +195,7 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
                 MainScene.Current.GoToPreviousScreen();
             }
 
-            SoundsManager.Instance.PlayBackground(MusicType.menu);
+            SoundsManager.Instance.PlayBackground(MusicType.menu, 1f);
         }
 
         bool IsItemLocked(UserDataManager playerData, UnlockInfo unlockInfo, string itemName, StoryInfo currentStory = null)

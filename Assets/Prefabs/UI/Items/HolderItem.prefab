@@ -256,6 +256,8 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+  m_MaxWidth: -1
+  m_MaxHeight: -1
 --- !u!114 &1791821429811682161
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2144,7 +2146,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_FontData:
-    m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
+    m_Font: {fileID: 12800000, guid: 0f1b98f55883494cb83468dbcd0d49ea, type: 3}
     m_FontSize: 50
     m_FontStyle: 0
     m_BestFit: 0

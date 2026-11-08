@@ -29,6 +29,12 @@ public class LevelMainController
     /// <summary>Seconds without input, after <see cref="AfkLossesBeforePause"/> failed runs, before pausing.</summary>
     private const float AfkDelay = 10f;
 
+    /// <summary>Seconds the menu music crossfades into the level music.</summary>
+    private const float MusicCrossfadeTime = 1.5f;
+
+    /// <summary>Seconds the level music fades out after finishing a level.</summary>
+    private const float WinMusicFadeTime = 1.5f;
+
     private static readonly Color GoldCoinColor = new Color(1f, 0.8117647f, 0.28235295f);
 
     private static readonly Color BronzeCoinColor = new Color(0.9647059f, 0.2901961f, 0.27450982f);
@@ -102,6 +108,11 @@ public class LevelMainController
             if (_pauseRender != value)
                 FixedRenderInterpolation.ResetHistory();
             _pauseRender = value;
+            GameplayPause.SetPaused(value);
+            if (!value)
+            {
+                SoundsManager.Instance.ResumeMusic();
+            }
         }
     }
 
@@ -117,6 +128,7 @@ public class LevelMainController
 
     public static void Clear()
     {
+        GameplayPause.SetPaused(false);
         current = null;
     }
 
@@ -135,7 +147,7 @@ public class LevelMainController
         _camera.Zooming(LocationCamera.CurrentZoom, true);
         _camera.Update();
         _controllerGadgets = new ControllerGadgets();
-        SoundsManager.Instance.PlayBackground(_location.Music);
+        SoundsManager.Instance.PlayBackground(_location.Music, MusicCrossfadeTime);
         _location.Start();
         CanPauseOrReload = true;
         Resources.UnloadUnusedAssets();
@@ -281,6 +293,7 @@ public class LevelMainController
         UserDataManager.Instance.Stats.Add(modelHuman.controllerStatistics);
         UserDataManager.Instance.SaveUserDate();
         LevelResult.LastLevelResult = new LevelResult(_location, _frameCount);
+        SoundsManager.Instance.FadeOutMusic(WinMusicFadeTime);
         EndRunAfter(time, () => CoroutineRunner.Instance.Run(GoToWinScene()));
     }
 
@@ -389,7 +402,7 @@ public class LevelMainController
         _camera.Zooming(LocationCamera.CurrentZoom, true);
         _location.Start();
         _camera.Update();
-        _pauseRender = false;
+        pauseRender = false;
         IsWin = false;
         IsDeath = false;
         slowModeFrames = 1;

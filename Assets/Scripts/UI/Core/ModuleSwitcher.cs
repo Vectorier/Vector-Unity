@@ -41,7 +41,7 @@ namespace UI
                 _EventSystem.enabled = false;
                 ownsInput = true;
             }
-            InputController.instance.Disable();
+            InputController.instance?.Disable();
             var c = _Background.color;
             c.a = 0;
             _Background.color = c;
@@ -79,7 +79,7 @@ namespace UI
             if (ownsInput && _EventSystem != null) _EventSystem.enabled = previousInput;
             ownsInput = false;
             
-            InputController.instance.Enable();
+            InputController.instance?.Enable();
             
         }
 

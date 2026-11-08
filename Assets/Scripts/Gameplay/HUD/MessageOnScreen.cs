@@ -21,7 +21,7 @@ public class MessageOnScreen : MonoBehaviour
         _text.text = LocalizationManager.Instance.GetTranslationOrKey(text);
         _text.color = color;
 
-        _sequence = DOTween.Sequence();
+        _sequence = DOTween.Sequence().SetId(GameplayPause.TweenId);
 
         var fade = _text.DOFade(1, 0.5f);
         _sequence.Append(fade);

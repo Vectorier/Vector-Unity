@@ -51,7 +51,7 @@ public class ItemGO : MonoBehaviour
         _animationSprite.Init(endSequence, _spriteRenderer);
         _animationSprite.Iterations = 1;
         _textMesh.gameObject.SetActive(true);
-        Sequence sequence = DOTween.Sequence();
+        Sequence sequence = DOTween.Sequence().SetId(GameplayPause.TweenId);
         var tween = _textMesh.transform.DOLocalMoveY(_textMesh.transform.localPosition.y + -200, 1);
         sequence.Append(tween);
         var callback = new TweenCallback(() => _textMesh.gameObject.SetActive(false));

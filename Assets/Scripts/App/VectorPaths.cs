@@ -33,5 +33,7 @@ namespace Core._Common
         public static readonly string AnimatedTextures = CurrentResources + "/animatedtextures";
 
         public static readonly string Icons = CurrentResources + "/icons";
+
+        public static readonly string Videos = CurrentResources + "/videos";
     }
 }

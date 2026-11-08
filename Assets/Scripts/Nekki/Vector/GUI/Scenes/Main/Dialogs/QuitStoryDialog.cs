@@ -14,7 +14,7 @@ namespace Nekki.Vector.GUI.Scenes.Main.Dialogs
                 MainScene.Current.RunController.gameObject.SetActive(false);
                 MainScene.Current.GoToPreviousScreen(false);
             });
-            SoundsManager.Instance.PlayBackground(MusicType.menu);
+            SoundsManager.Instance.PlayBackground(MusicType.menu, 1.5f);
         }
 
         public void OnCancelTap()

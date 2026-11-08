@@ -68,7 +68,7 @@ namespace Nekki.Vector.GUI.Scenes.Main
             
             yield return GetDialog<VideoDialog>().Show("intro.mp4");
             
-            SoundsManager.Instance.PlayBackground(MusicType.menu);
+            SoundsManager.Instance.PlayBackground(MusicType.menu, 1f);
         }
 
         public void SwitchScreen<T>(bool fade = true) where T : UIModule

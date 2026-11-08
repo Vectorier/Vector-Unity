@@ -7397,13 +7397,6 @@
         <Object Name="TriggerHurdleJump" X="0" Y="-200"/>
       </Content>
     </Object>
-    <Object Name="JumpInSitTest" InX="0" InY="0" OutX="5000" OutY="0">
-      <Content>
-        <Object Name="Booth" X="0" Y="-400"/>
-        <Object Name="JumpInSitTest" X="0" Y="200"/>
-        <Object Name="JumpInSitTest" X="1100" Y="400"/>
-      </Content>
-    </Object>
     <Object Name="Building_CE_01" InX="0" InY="0" OutX="4909" OutY="0">
       <Content>
         <Object Name="LampPostImage" X="1690" Y="-610"/>

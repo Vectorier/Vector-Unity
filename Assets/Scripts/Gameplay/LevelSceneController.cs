@@ -64,10 +64,15 @@ public class LevelSceneController : MonoBehaviour
 
     private void OnDisable()
     {
-        Gameplay.Up.performed -= OnUp;
-        Gameplay.Down.performed -= OnDown;
-        Gameplay.Left.performed -= OnLeft;
-        Gameplay.Right.performed -= OnRight;
+        var input = InputController.instance;
+        if (input != null)
+        {
+            var gameplay = input.InputActions.Gameplay;
+            gameplay.Up.performed -= OnUp;
+            gameplay.Down.performed -= OnDown;
+            gameplay.Left.performed -= OnLeft;
+            gameplay.Right.performed -= OnRight;
+        }
 
         RenderPipelineManager.beginCameraRendering -= BeginCameraRender;
         RenderPipelineManager.endCameraRendering -= EndCameraRender;
