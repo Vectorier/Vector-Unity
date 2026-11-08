@@ -104,8 +104,9 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
             }
             else
             {
+                // Best time is the fastest one; a zero time means none was recorded yet.
                 var timeSpan = res.timeSpan;
-                if (stats.TimeSpan > timeSpan)
+                if (stats.TimeSpan > System.TimeSpan.Zero && stats.TimeSpan < timeSpan)
                 {
                     timeSpan = stats.TimeSpan;
                 }

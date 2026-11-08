@@ -13,6 +13,9 @@ public class GameStats : BaseUserHolder<GameStats>
 
     protected override string JSONName => "GameStats";
 
+    /// <summary>Raised after track records change (and are saved), e.g. to refresh star counters.</summary>
+    public event System.Action Changed;
+
     // Saved as "TrackStats": { "<track>": { "Points": 700, "Stars": 3, "Time": "00:00:56.85" }, ... }
     public override void ParseData()
     {
@@ -58,6 +61,7 @@ public class GameStats : BaseUserHolder<GameStats>
         }
         _userjObject["TrackStats"] = tracks;
         UserDataManager.Instance.SaveUserDate();
+        Changed?.Invoke();
     }
 
     public void TrackStatsAdd(string storyName, Record record)

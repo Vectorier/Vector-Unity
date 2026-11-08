@@ -21,9 +21,10 @@ namespace Nekki.Vector.GUI.Scenes.Main
         {
             _playerData = UserDataManager.Instance;
             _playerData.MainData.CoinsChangedEvent += RunAnimation;
+            _playerData.GameStats.Changed += RefreshStars;
             // UiRoot.Instance.pauseAnimationWalletView += OnPauseAnimation;
             _lastValue = _playerData.MainData.GetCoins();
-            StarsText.text = _playerData.GameStats.GetAllStars().ToString();
+            RefreshStars();
             CoinsText.text = _lastValue.ToString();
         }
 
@@ -58,6 +59,11 @@ namespace Nekki.Vector.GUI.Scenes.Main
         protected override void OnActivated()
         {
             base.OnActivated();
+            RefreshStars();
+        }
+
+        private void RefreshStars()
+        {
             StarsText.text = _playerData.GameStats.GetAllStars().ToString();
         }
 
@@ -65,6 +71,7 @@ namespace Nekki.Vector.GUI.Scenes.Main
         {
             base.Free();
             _playerData.MainData.CoinsChangedEvent -= RunAnimation;
+            _playerData.GameStats.Changed -= RefreshStars;
         }
     }
 }
