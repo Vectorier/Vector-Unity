@@ -25,9 +25,13 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
         private Sequence _starsSequence;
 
 
+        /// <summary>Seconds the level music fades out once the results are shown.</summary>
+        private const float MusicFadeOutTime = 1.5f;
+
         protected override void OnActivated()
         {
             base.OnActivated();
+            SoundsManager.Instance.FadeOutMusic(MusicFadeOutTime);
 
             SetScores();
 
@@ -238,12 +242,14 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
         {
             MainScene.Current.ClearHistoryUntil<PreGameplayScreen>();
             MainScene.Current.GoToPreviousScreen();
+            SoundsManager.Instance.PlayBackground(MusicType.menu, 1f);
         }
 
         public void OnBackTap()
         {
             MainScene.Current.ClearHistoryUntil<SelectStoryScreen>();
             MainScene.Current.GoToPreviousScreen();
+            SoundsManager.Instance.PlayBackground(MusicType.menu, 1f);
         }
 
         protected override void YPress(InputAction.CallbackContext ctx = default)

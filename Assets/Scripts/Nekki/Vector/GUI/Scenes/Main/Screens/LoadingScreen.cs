@@ -8,6 +8,9 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
 {
     public class LoadingScreen : UIModule
     {
+        /// <summary>Seconds the menu music fades out before the level loads.</summary>
+        private const float MusicFadeOutTime = 1f;
+
         protected override void OnActivated()
         {
             base.OnActivated();
@@ -17,7 +20,8 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
 
         IEnumerator Load()
         {
-            yield return null;
+            SoundsManager.Instance.FadeOutMusic(MusicFadeOutTime);
+            yield return new WaitForSecondsRealtime(MusicFadeOutTime);
             
             var storyInfo = UserDataManager.Instance.CurrentBalanceLocation.CurrentStoryModeStoryInfos[UserDataManager.RuntimeInfo.CurrentStory];
             CurrentTrackInfo.Current.LocationFile = storyInfo.Name.Replace("_HUNTER", "") + ".xml";
