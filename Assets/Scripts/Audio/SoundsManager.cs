@@ -176,6 +176,8 @@ public class SoundsManager : MonoBehaviour
     private float _fadeSourceGain;
     private bool _musicPaused;
     private bool _musicFadingOut;
+    private float _musicDuck = 1f;
+    private Coroutine _duckFade;
     private Coroutine _musicFade;
     private int _musicRequest;
 
@@ -192,8 +194,8 @@ public class SoundsManager : MonoBehaviour
 
     private void ApplyMusicVolume()
     {
-        AudioSourceBackground.volume = _musicLevel * _musicGain;
-        if (_musicFadeSource != null) _musicFadeSource.volume = _musicLevel * _fadeSourceGain;
+        AudioSourceBackground.volume = _musicLevel * _musicGain * _musicDuck;
+        if (_musicFadeSource != null) _musicFadeSource.volume = _musicLevel * _fadeSourceGain * _musicDuck;
     }
 
     private void StopMusicFade()
@@ -312,6 +314,43 @@ public class SoundsManager : MonoBehaviour
             AudioSourceBackground.Stop();
             _musicFadeSource.Stop();
         }));
+    }
+
+    /// <summary>
+    /// Temporarily lowers the music to <paramref name="target"/> (0-1) of its normal volume, e.g. 0.5 while the
+    /// player is dead, and back with 1. It multiplies the player's music volume and the other fades, so the
+    /// settings slider, mute and pause/track fades keep working; each call replaces the previous duck fade.
+    /// </summary>
+    public void DuckMusic(float target, float fade)
+    {
+        EnsureMusicSources();
+        if (_duckFade != null)
+        {
+            StopCoroutine(_duckFade);
+            _duckFade = null;
+        }
+        target = Mathf.Clamp01(target);
+        if (fade <= 0f || !isActiveAndEnabled)
+        {
+            _musicDuck = target;
+            ApplyMusicVolume();
+            return;
+        }
+        _duckFade = StartCoroutine(FadeDuck(target, fade));
+    }
+
+    private IEnumerator FadeDuck(float target, float duration)
+    {
+        float start = _musicDuck;
+        for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
+        {
+            _musicDuck = Mathf.Lerp(start, target, t / duration);
+            ApplyMusicVolume();
+            yield return null;
+        }
+        _musicDuck = target;
+        ApplyMusicVolume();
+        _duckFade = null;
     }
 
     /// <summary>Moves the current track's gain to <paramref name="target"/> while any fading-out track goes to 0.</summary>

@@ -29,6 +29,22 @@ public class LevelMainController
     /// <summary>Seconds without input, after <see cref="AfkLossesBeforePause"/> failed runs, before pausing.</summary>
     private const float AfkDelay = 10f;
 
+    /// <summary>Extra seconds a death (killed, crashed, arrested) waits before the automatic restart.</summary>
+    private const float DeathRestartExtraDelay = 0.7f;
+
+    /// <summary>Music volume (fraction of normal) while the player is dead.</summary>
+    private const float DeathMusicVolume = 0.5f;
+
+    private const float DeathMusicFadeTime = 0.5f;
+
+    /// <summary>Fade to black (and back) around an automatic restart after a death or loss.</summary>
+    private const float RestartFadeTime = 0.3f;
+
+    private const float RestartBlackHold = 0.1f;
+
+    /// <summary>Safety net: restart anyway if the fade transition never reaches its callback.</summary>
+    private const float RestartTransitionTimeout = 3f;
+
     private static readonly Color GoldCoinColor = new Color(1f, 0.8117647f, 0.28235295f);
 
     private static readonly Color BronzeCoinColor = new Color(0.9647059f, 0.2901961f, 0.27450982f);
@@ -57,6 +73,10 @@ public class LevelMainController
     private float _endDelay = -1f;
 
     private Action _endAction;
+
+    private bool _restartTransition;
+
+    private float _restartTransitionStart;
 
     public static LevelMainController current { get; private set; }
 
@@ -115,6 +135,7 @@ public class LevelMainController
     public static void Init(LevelSceneController levelSceneController)
     {
         IsHunterMode = UserDataManager.RuntimeInfo.IsHunterMode;
+        SoundsManager.Instance.DuckMusic(1f, 0f);
         current = new LevelMainController { levelSceneController = levelSceneController };
         current.InitLevel();
         current.pauseRender = true;
@@ -123,6 +144,7 @@ public class LevelMainController
     public static void Clear()
     {
         GameplayPause.SetPaused(false);
+        SoundsManager.Instance.DuckMusic(1f, 0f);
         current = null;
     }
 
@@ -192,6 +214,11 @@ public class LevelMainController
     public void Tick(float deltaTime)
     {
         CheckAfkPause();
+
+        if (_restartTransition && Time.unscaledTime - _restartTransitionStart > RestartTransitionTimeout)
+        {
+            Reload();
+        }
 
         if (_endDelay < 0f)
         {
@@ -315,7 +342,7 @@ public class LevelMainController
         if (BeginLoss(modelHuman))
         {
             modelHuman.Death(GameEndType.GE_MURDER);
-            EndRunAfter(0.5f, Reload);
+            BeginDeath(modelHuman, 0.5f);
         }
     }
 
@@ -325,7 +352,7 @@ public class LevelMainController
         {
             modelHuman.Death(GameEndType.GE_DEATH);
             modelHuman.StartPhysics();
-            EndRunAfter(time, Reload);
+            BeginDeath(modelHuman, time);
         }
     }
 
@@ -335,7 +362,7 @@ public class LevelMainController
         {
             LocationCamera.Current.Stop();
             modelHuman.Death(GameEndType.GE_LOSS);
-            EndRunAfter(time, Reload);
+            EndRunAfter(time, RestartWithFade);
         }
     }
 
@@ -343,8 +370,38 @@ public class LevelMainController
     {
         if (BeginLoss(modelHuman))
         {
-            EndRunAfter(1f, Reload);
+            BeginDeath(modelHuman, 1f);
         }
+    }
+
+    /// <summary>Death state: lowers the music while the player is dead and restarts a little later, through a fade.</summary>
+    private void BeginDeath(ModelHuman modelHuman, float restartDelay)
+    {
+        if (!modelHuman.IsBot)
+        {
+            SoundsManager.Instance.DuckMusic(DeathMusicVolume, DeathMusicFadeTime);
+        }
+        EndRunAfter(restartDelay + DeathRestartExtraDelay, RestartWithFade);
+    }
+
+    /// <summary>Automatic restart after a death or loss: fade to black, restart the level, fade back in.</summary>
+    private void RestartWithFade()
+    {
+        if (_restartTransition)
+        {
+            return;
+        }
+        _restartTransition = true;
+        _restartTransitionStart = Time.unscaledTime;
+        var level = this;
+        MainScene.Current.ModuleSwitcher.Switch(() =>
+        {
+            // The level may have been left or already restarted while the screen was fading.
+            if (current == level && _restartTransition)
+            {
+                Reload();
+            }
+        }, RestartFadeTime, RestartBlackHold);
     }
 
     /// <summary>Marks the run as lost; false when the run already ended.</summary>
@@ -388,6 +445,8 @@ public class LevelMainController
     {
         _endDelay = -1f; // a manual restart during the end delay cancels the automatic one
         _endAction = null;
+        _restartTransition = false;
+        SoundsManager.Instance.DuckMusic(1f, DeathMusicFadeTime);
         FixedRenderInterpolation.ResetHistory();
         _location.Reload();
         TutorialUnLockGame();
