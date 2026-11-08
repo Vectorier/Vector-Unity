@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Nekki.Vector.Core.Location.Animation
 {
@@ -51,6 +52,15 @@ namespace Nekki.Vector.Core.Location.Animation
             }
             base.Init();
             var scale = _CachedTransform.localScale;
+            var sprite = Animator != null && Animator._spriteRenderer != null ? Animator._spriteRenderer.sprite : null;
+            var frameSize = sprite != null ? (Vector2)sprite.bounds.size : Vector2.zero;
+            // Base size: the element's Width/Height when given, otherwise the plist frame size.
+            if (_Width > 0f && _Height > 0f && frameSize.x > 0f && frameSize.y > 0f)
+            {
+                scale.x *= _Width / frameSize.x;
+                scale.y *= _Height / frameSize.y;
+            }
+            // ScaleX/ScaleY always apply on top of the base size.
             scale.x *= _ScaleX;
             scale.y *= _ScaleY;
             _CachedTransform.localScale = scale;

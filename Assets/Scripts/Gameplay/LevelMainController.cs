@@ -362,6 +362,10 @@ public class LevelMainController
         {
             LocationCamera.Current.Stop();
             modelHuman.Death(GameEndType.GE_LOSS);
+            if (!modelHuman.IsBot)
+            {
+                SoundsManager.Instance.DuckMusic(DeathMusicVolume, DeathMusicFadeTime);
+            }
             EndRunAfter(time, RestartWithFade);
         }
     }
