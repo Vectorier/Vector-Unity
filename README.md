@@ -49,14 +49,19 @@ The project uses [Unity Version 6000.6.8f1](https://unity.com/releases/editor/wh
 Vector Unity is used alongside with Vectorier, [the repository can be found here](https://github.com/Vectorier/Vectorier)
 
 # Installation
-
-wip
+- Go to the [Releases](https://github.com/FlipThoseTitle/Vector-Unity/releases) page
+- Download the zip for your computer:
+  - Windows: `Vector-x.x.x-Windows-x64.zip`
+  - macOS: `Vector-x.x.x-macOS-Universal.zip`
+  - Linux: `Vector-x.x.x-Linux-x64.zip`
+- Extract the zip file
+- Run `Vector` (`Vectorier.exe` on Windows).
 
 # Project layout
 
 | Folder | Contents |
 | --- | --- |
-| `Assets/Art` | UI sprites (by purpose), sprite atlases, branding images, render textures |
+| `Assets/Art` | UI sprites, sprite atlases, branding images, render textures |
 | `Assets/Prefabs/UI` | Menu screens, dialogs and list items |
 | `Assets/Resources` | Only what is loaded by path at runtime: fonts, shaders, gameplay prefabs, `SoundsManager`, DOTween settings |
 | `Assets/Scenes` | `Preloader` (loads data) and `Main` (menus and gameplay) |
