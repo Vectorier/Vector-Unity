@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using GameDiagnostics;
 using System.IO;
 using Nekki.Vector.Core.Frame;
 using UnityEngine;
@@ -26,8 +28,25 @@ namespace Nekki.Vector.Core.Animation
             var bytes = ResourceManager.GetBinary(fileName);
             if (bytes == null)
             {
+                GameLog.Warning("Loading the moves", "The move's animation file does not exist.", "The move has no frames.", fileName);
                 return new Provider(0);
             }
+            try
+            {
+                return Parse(fileName, bytes, useCache);
+            }
+            catch (Exception ex) when (ex is EndOfStreamException || ex is IOException || ex is OverflowException || ex is OutOfMemoryException || ex is ArgumentException)
+            {
+                // A .bin cut short or of another format: the move plays without frames, as a missing one does.
+                GameLog.Add(GameErrorReport.From(new GameDataException(
+                    $"The animation file is cut short or is not a move animation (.bin, {bytes.Length} bytes).", fileName, inner: ex),
+                    "Loading the moves", GameErrorSeverity.Warning, "The move has no frames."));
+                return new Provider(0);
+            }
+        }
+
+        private static Provider Parse(string fileName, byte[] bytes, bool useCache)
+        {
             var stream = new MemoryStream(bytes);
             var reader = new BinaryReader(stream);
 

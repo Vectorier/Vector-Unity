@@ -29,6 +29,19 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
             MainScene.Current.RunController.gameObject.SetActive(true);
             
             yield return null;
+
+            // The level could not be loaded (the error log shows why): back to the story menu.
+            if (LevelSceneController.LoadFailed)
+            {
+                MainScene.Current.ClearHistoryUntil<SelectStoryScreen>();
+                MainScene.Current.ModuleSwitcher.Switch(() =>
+                {
+                    MainScene.Current.RunController.gameObject.SetActive(false);
+                    MainScene.Current.GoToPreviousScreen(false);
+                });
+                SoundsManager.Instance.PlayBackground(MusicType.menu, 1.5f);
+                yield break;
+            }
             
             MainScene.Current.SwitchScreen<GameplayScreen>(string.IsNullOrEmpty(storyInfo.CutsceneStart));
 
@@ -42,7 +55,8 @@ namespace Nekki.Vector.GUI.Scenes.Main.Screens
             
             yield return null;
 
-            LevelMainController.current.pauseRender = false;
+            if (LevelMainController.current != null)
+                LevelMainController.current.pauseRender = false;
         }
     }
 }

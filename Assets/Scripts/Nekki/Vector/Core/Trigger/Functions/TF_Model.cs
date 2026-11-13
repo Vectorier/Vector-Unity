@@ -100,7 +100,7 @@ namespace Nekki.Vector.Core.Trigger.Functions
             }
             if (_Geter == null && _NodeFunc == null)
             {
-                ErrorDialog.Report("TF_Func init error by geterName = " + text, true);
+                GameDiagnostics.GameLog.Warning("Loading the level's triggers", $"Unknown model function \"{text}\" in a trigger.", "It reads as nothing.");
             }
         }
 

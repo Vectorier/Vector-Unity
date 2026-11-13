@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Xml;
+using GameDiagnostics;
 using Nekki.Vector.Core.Animation.Events;
 using Nekki.Vector.Core.Detector;
 
@@ -186,6 +188,21 @@ namespace Nekki.Vector.Core.Animation
 		{
             foreach (XmlNode item in pNode)
             {
+                // An event that cannot be read is left out; the interval keeps its other events.
+                try
+                {
+                    ParseEvent(item);
+                }
+                catch (Exception ex)
+                {
+                    GameLog.Recovered(ex, "Loading the moves (moves.xml)", $"The <{item.Name}> event was skipped.", item);
+                }
+            }
+        }
+
+        private void ParseEvent(XmlNode item)
+        {
+            {
                 string p_GroupNames = item.Attributes["Groups"].ParseString();
                 switch (item.Name)
                 {
@@ -242,7 +259,14 @@ namespace Nekki.Vector.Core.Animation
             {
                 foreach (XmlNode item in xmlNode)
                 {
-                    list.Add(new AnimationReaction(item));
+                    try
+                    {
+                        list.Add(new AnimationReaction(item));
+                    }
+                    catch (Exception ex)
+                    {
+                        GameLog.Recovered(ex, "Loading the moves (moves.xml)", $"The reaction \"{item.Name}\" was left out.", item);
+                    }
                 }
             }
             if (groupNames != null)
@@ -251,6 +275,12 @@ namespace Nekki.Vector.Core.Animation
                 foreach (string name in array)
                 {
                     AnimationGroup group = AnimationGroup.GetGroup(name);
+                    if (group == null)
+                    {
+                        GameLog.Warning("Loading the moves (moves.xml)", $"The reaction group \"{name}\" does not exist in <ReactionGroups>.",
+                            "The event goes on without it.", node: node, attribute: "Groups");
+                        continue;
+                    }
                     list.AddRange(group.Reactions);
                 }
             }

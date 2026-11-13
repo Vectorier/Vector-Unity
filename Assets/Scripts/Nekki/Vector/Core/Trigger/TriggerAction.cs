@@ -16,6 +16,30 @@ namespace Nekki.Vector.Core.Trigger
 
 		public virtual int Frames => 0;
 
+		/// <summary>The action's element in the level or template XML (for the error log).</summary>
+		public XmlNode SourceNode { get; private set; }
+
+		/// <summary>The trigger the action belongs to.</summary>
+		public TriggerRunner Trigger => _ParentLoop?.ParentTrigger;
+
+		/// <summary>
+		/// Runs the action; an error in it is logged (once, then counted) and the next action runs, so one broken
+		/// action does not break the frame or the level.
+		/// </summary>
+		public void ActivateSafely(ref bool isRunNext)
+		{
+			try
+			{
+				Activate(ref isRunNext);
+			}
+			catch (System.Exception ex)
+			{
+				GameDiagnostics.GameLog.Recovered(ex, "Running the level's triggers",
+					$"The <{SourceNode?.Name ?? GetType().Name}> action of the trigger \"{Trigger?.Name}\" was skipped.", SourceNode);
+				isRunNext = true;
+			}
+		}
+
 		public static TriggerAction CreateAction(XmlNode p_node, TriggerLoop p_parent, Dictionary<string, string> p_prefix)
 		{
             newNamesVars = p_prefix;
@@ -107,11 +131,16 @@ namespace Nekki.Vector.Core.Trigger
                     }
                 }
                 Dictionary<string, string> dictionary2 = newNamesVars;
-                TriggerAction triggerRunnerAction = CreateAction(childNode, p_loop, dictionary);
-                if (triggerRunnerAction != null)
+                try
                 {
-                    p_actions.Add(triggerRunnerAction);
+                    TriggerAction triggerRunnerAction = CreateAction(childNode, p_loop, dictionary);
+                    if (triggerRunnerAction != null)
+                    {
+                        triggerRunnerAction.SourceNode = childNode;
+                        p_actions.Add(triggerRunnerAction);
+                    }
                 }
+                catch (System.Exception ex) when (GameDiagnostics.XmlSource.Note(ex, childNode)) { throw; }
                 newNamesVars = dictionary2;
             }
         }

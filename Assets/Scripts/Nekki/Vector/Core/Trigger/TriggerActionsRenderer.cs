@@ -80,7 +80,7 @@ namespace Nekki.Vector.Core.Trigger
             for (int i = 0; i < count; i++)
             {
                 bool isRunNext = true;
-                p_actions[i].Activate(ref isRunNext);
+                p_actions[i].ActivateSafely(ref isRunNext);
 
                 if (!isRunNext)
                 {
@@ -130,7 +130,7 @@ namespace Nekki.Vector.Core.Trigger
                     }
 
                     TriggerAction action = list[list.Count - 1];
-                    action.Activate(ref isRunNext);
+                    action.ActivateSafely(ref isRunNext);
 
                     if (isRunNext)
                     {

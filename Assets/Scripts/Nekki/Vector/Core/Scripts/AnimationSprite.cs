@@ -67,7 +67,7 @@ namespace Nekki.Vector.Core.Scripts
         {
             if (sprites == null)
             {
-                ErrorDialog.Report("Error create animation", false, true);
+                GameDiagnostics.GameLog.Warning("Loading the level", "An animated texture has no frames (its atlas could not be read).", "The animation is not drawn.");
 
                 return;
             }
@@ -76,7 +76,7 @@ namespace Nekki.Vector.Core.Scripts
 
             if (_totalFrames == 0)
             {
-                ErrorDialog.Report("Error create animation", false);
+                GameDiagnostics.GameLog.Warning("Loading the level", "An animated texture has no frames.", "The animation is not drawn.");
                 return;
             }
             if (p_spriteRender == null)
@@ -154,7 +154,7 @@ namespace Nekki.Vector.Core.Scripts
 
             if (p_name.StartsWith(Application.streamingAssetsPath) && !ResourceManager.FileExists(p_name, out atlasPath, ".plist", ".json"))
             {
-                ErrorDialog.Report("Animation not found: " + Path.GetFileNameWithoutExtension(p_name), false, true);
+                GameDiagnostics.GameLog.Warning("Loading the level", $"The animated texture \"{Path.GetFileNameWithoutExtension(p_name)}\" was not found (no .plist or .json atlas).", "The animation is not drawn.", p_name);
             }
 
 

@@ -31,8 +31,14 @@ public static class ResourceManager
 
         textureCache.Clear();
 
+        // Loads still running belong to the level being left: they end without caching or calling back.
         inFlightLoads.Clear();
+        inFlightSprites.Clear();
+        _cacheGeneration++;
     }
+
+    /// <summary>Changes each time the texture cache is cleared (a level is left).</summary>
+    private static int _cacheGeneration;
 
 
     public static byte[] GetBinary(string p_path)
@@ -271,6 +277,7 @@ public static class ResourceManager
         }
 
         inFlightLoads[path] = new List<System.Action<Texture2D>> { onLoaded };
+        int generation = _cacheGeneration;
 
         string uri = path;
 
@@ -285,6 +292,15 @@ public static class ResourceManager
         yield return request.SendWebRequest();
 
         Texture2D tex = null;
+
+        // The cache was cleared while this loaded (the level was left): the texture is not kept and nobody
+        // waiting for it is still there.
+        if (generation != _cacheGeneration)
+        {
+            if (request.result == UnityWebRequest.Result.Success && DownloadHandlerTexture.GetContent(request) is Texture2D stale)
+                UnityEngine.Object.Destroy(stale);
+            yield break;
+        }
 
         if (request.result != UnityWebRequest.Result.Success)
         {
@@ -303,7 +319,8 @@ public static class ResourceManager
             }
         }
 
-        var waitingCallbacks = inFlightLoads[path];
+        if (!inFlightLoads.TryGetValue(path, out var waitingCallbacks))
+            yield break;
         inFlightLoads.Remove(path);
 
         foreach (var callback in waitingCallbacks)
@@ -331,6 +348,7 @@ public static class ResourceManager
         }
 
         inFlightSprites[spriteKey] = new List<Action<Sprite>> { onLoaded };
+        int generation = _cacheGeneration;
 
         Sprite sprite = null;
 
@@ -353,7 +371,9 @@ public static class ResourceManager
             spriteCache[spriteKey] = sprite;
         });
 
-        var waitingCallbacks = inFlightSprites[spriteKey];
+        // Left the level while loading: nobody waiting is still there (and the image is not "missing").
+        if (generation != _cacheGeneration || !inFlightSprites.TryGetValue(spriteKey, out var waitingCallbacks))
+            yield break;
         inFlightSprites.Remove(spriteKey);
 
         foreach (var callback in waitingCallbacks)

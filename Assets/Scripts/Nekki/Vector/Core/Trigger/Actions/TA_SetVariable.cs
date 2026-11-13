@@ -25,7 +25,7 @@ namespace Nekki.Vector.Core.Trigger.Actions
                 _ValueVar = _ParentLoop.GetParentVar(value2);
                 if (_ValueVar == null)
                 {
-                    ErrorDialog.Report("Error create Action SetVariable no found : " + value2, true);
+                    GameDiagnostics.GameLog.Warning("Loading the level's triggers", $"SetVariable: the variable \"{value2}\" does not exist.", "The action has no value to set.", node: p_node, attribute: "Value");
                 }
             }
             else
@@ -42,7 +42,7 @@ namespace Nekki.Vector.Core.Trigger.Actions
             }
             if (_SetVar == null)
             {
-                ErrorDialog.Report("Error create Action SetVariable not found =" + value, true);
+                GameDiagnostics.GameLog.Warning("Loading the level's triggers", $"SetVariable: the variable \"{value}\" does not exist.", "The action sets nothing.", node: p_node, attribute: "Name");
             }
         }
 

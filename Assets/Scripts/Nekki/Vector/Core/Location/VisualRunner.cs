@@ -114,7 +114,7 @@ namespace Nekki.Vector.Core.Location
         {
             if (string.IsNullOrEmpty(_Name))
             {
-                ErrorDialog.Report("Image with no name", false);
+                GameDiagnostics.GameLog.Warning("Loading the level", "An image has no ClassName (texture name).", "The image is not drawn.");
             }
             if (IsAnimation(_Name))
             {
@@ -129,7 +129,7 @@ namespace Nekki.Vector.Core.Location
             {
                 if (sprite == null)
                 {
-                    ErrorDialog.Report("Image not found: " + _Name, false);
+                    GameDiagnostics.GameLog.Warning("Loading the level", $"The texture \"{_Name}\" (an image's ClassName) is not in the game's textures.", "The image is not drawn.", VectorPaths.Textures + "/" + _Name);
                     return;
                 }
                 _SpriteRender.sprite = sprite;

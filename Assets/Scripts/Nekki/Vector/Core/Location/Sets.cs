@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml;
 using Core._Common;
+using GameDiagnostics;
 using Nekki.Vector.Core.Location.Animation;
 using Nekki.Vector.Core.User;
 using Nekki.Vector.Core.Visual;
@@ -118,18 +119,22 @@ namespace Nekki.Vector.Core.Location
             {
                 return node;
             }
-            Debug.LogError("Object not found: " + name);
             return null;
         }
 
         private void LoadLevel()
         {
-            var root = _document["Root"];
+            var root = XmlSource.RequiredChild(_document, "Root");
             if (root["Sets"] != null)
             {
                 foreach (XmlNode set in root["Sets"])
                 {
-                    var fileName = set.Attributes["FileName"].Value;
+                    var fileName = set.Attributes?["FileName"]?.Value;
+                    if (string.IsNullOrEmpty(fileName))
+                    {
+                        GameLog.Warning(Stage, "The set has no FileName attribute.", "The set was skipped.", node: set, attribute: "FileName");
+                        continue;
+                    }
                     if (set.Name == "City")
                     {
                         _filesBuilds.Add(fileName);
@@ -152,7 +157,7 @@ namespace Nekki.Vector.Core.Location
                 var root = XmlUtils.OpenXMLDocument(VectorPaths.XmlRoot, file)?["Root"];
                 if (root == null)
                 {
-                    Debug.LogError("Empty node from file \"" + file + "\"!");
+                    // A file missing or not XML was logged when it was read.
                     continue;
                 }
                 if (root["Objects"] != null)
@@ -163,7 +168,11 @@ namespace Nekki.Vector.Core.Location
                 {
                     foreach (XmlNode set in root["Sets"])
                     {
-                        _filesObjects.Add(set.Attributes["FileName"].Value);
+                        var fileName = set.Attributes?["FileName"]?.Value;
+                        if (string.IsNullOrEmpty(fileName))
+                            GameLog.Warning(Stage, "The set has no FileName attribute.", "The set was skipped.", node: set, attribute: "FileName");
+                        else
+                            _filesObjects.Add(fileName);
                     }
                 }
             }
@@ -176,7 +185,11 @@ namespace Nekki.Vector.Core.Location
                 var root = XmlUtils.OpenXMLDocument(VectorPaths.XmlRoot, file)?["Root"];
                 if (root == null)
                 {
-                    Debug.LogError("Empty node from file \"" + file + "\"!");
+                    continue;
+                }
+                if (root["Objects"] == null)
+                {
+                    GameLog.Warning(Stage, "The object set has no <Objects> element.", "Its objects are not available.", node: root);
                     continue;
                 }
                 _xmlObjects.Add(root["Objects"]);
@@ -198,7 +211,10 @@ namespace Nekki.Vector.Core.Location
             {
                 foreach (XmlNode build in node)
                 {
-                    _objectsNodes[build.Attributes["Name"].Value] = build;
+                    if (build.Attributes?["Name"]?.Value is string buildName)
+                        _objectsNodes[buildName] = build;
+                    else
+                        GameLog.Warning(Stage, "The object has no Name attribute.", "It cannot be placed by name.", node: build, attribute: "Name");
                 }
             }
             ParseLevel();
@@ -211,7 +227,12 @@ namespace Nekki.Vector.Core.Location
             {
                 foreach (XmlNode node in nodes)
                 {
-                    _choices[node.Attributes["Name"].Value] = node.Attributes["Variant"].Value;
+                    string name = node.Attributes?["Name"]?.Value, variant = node.Attributes?["Variant"]?.Value;
+                    if (name == null || variant == null)
+                        GameLog.Warning(Stage, "The choice needs both a Name and a Variant attribute.", "The choice was skipped.", node: node,
+                            attribute: name == null ? "Name" : "Variant");
+                    else
+                        _choices[name] = variant;
                 }
             }
             _choices["AITriggers"] = LevelMainController.IsHunterMode ? "HunterMode" : "CommonMode";
@@ -220,17 +241,51 @@ namespace Nekki.Vector.Core.Location
         private void ParseLevel()
         {
             var root = _document["Root"];
-            TotalCoins = root["Coins"].Attributes["Value"].ParseInt();
+            TotalCoins = root["Coins"]?.Attributes["Value"].ParseInt() ?? 0;
             ParseModels(root.ChildNodes.Cast<XmlNode>().Where(node => node.Name == "Models"));
-            Music = root["Music"].Attributes["Name"].Value;
+            Music = root["Music"]?.Attributes["Name"]?.Value;
+            if (Music == null)
+                GameLog.Warning(Stage, "The level has no <Music Name=\"...\"> element.", "The level plays without music.", node: root);
             CreateObjects();
             CollectElements(_objects);
 
-            foreach (var trigger in Triggers) trigger.Init();
-            foreach (var particle in Particles) particle.Init();
-            foreach (var animation in Animations) animation.Init();
-            foreach (var primitive in Primitives) primitive.Load();
-            foreach (var visual in Visuals) visual.Init();
+            // Each one that cannot start is logged and left out; the level plays without it.
+            foreach (var trigger in Triggers.ToList())
+            {
+                try
+                {
+                    trigger.Init();
+                }
+                catch (System.Exception ex)
+                {
+                    GameLog.Recovered(ex, Stage, $"The trigger \"{trigger.Name}\" was turned off.");
+                    trigger.IsEnabled = false;
+                    Triggers.Remove(trigger);
+                    QuadsAll.Remove(trigger);
+                    _allRunners.Remove(trigger);
+                }
+            }
+            InitEach(Particles, particle => particle.Init(), "particle effect");
+            InitEach(Animations, animation => animation.Init(), "animation");
+            InitEach(Primitives, primitive => primitive.Load(), "model");
+            InitEach(Visuals, visual => visual.Init(), "image");
+        }
+
+        private const string Stage = "Loading the level";
+
+        private static void InitEach<T>(List<T> runners, System.Action<T> init, string kind) where T : Runner
+        {
+            foreach (var runner in runners)
+            {
+                try
+                {
+                    init(runner);
+                }
+                catch (System.Exception ex)
+                {
+                    GameLog.Recovered(ex, Stage, $"The {kind} \"{runner.Name}\" was not started.");
+                }
+            }
         }
 
         private void ParseModels(IEnumerable<XmlNode> nodes)
@@ -255,13 +310,20 @@ namespace Nekki.Vector.Core.Location
         {
             foreach (XmlNode node in models.ChildNodes)
             {
-                _userData.Add(Nekki.Vector.Core.User.UserData.FromXml(node));
+                try
+                {
+                    _userData.Add(Nekki.Vector.Core.User.UserData.FromXml(node));
+                }
+                catch (System.Exception ex)
+                {
+                    GameLog.Recovered(ex, Stage, "The character was left out of the level.", node);
+                }
             }
         }
 
         private void CreateObjects()
         {
-            XmlNode track = _document["Root"]["Track"];
+            XmlNode track = XmlSource.RequiredChild(_document["Root"], "Track");
             var factors = new List<float>();
             var levelObject = new GameObject("Level_root_object");
             LevelMainController.current.LevelObject = levelObject;
@@ -269,7 +331,10 @@ namespace Nekki.Vector.Core.Location
             {
                 if (xmlNode.Attributes["Factor"] != null)
                 {
-                    factors.Add(float.Parse(xmlNode.Attributes["Factor"].Value, CultureInfo.InvariantCulture));
+                    if (float.TryParse(xmlNode.Attributes["Factor"].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var factor))
+                        factors.Add(factor);
+                    else
+                        GameLog.Warning(Stage, "The Factor is not a number.", "The object uses factor 0.", node: xmlNode, attribute: "Factor");
                 }
             }
             factors.Sort();
@@ -278,8 +343,16 @@ namespace Nekki.Vector.Core.Location
             foreach (XmlNode childNode in track)
             {
                 var objectRunner = new ObjectRunner(index, null);
-                index += objectRunner.Parse(childNode, null, _choices);
-                objectRunner.Init();
+                try
+                {
+                    index += objectRunner.Parse(childNode, null, _choices);
+                    objectRunner.Init();
+                }
+                catch (System.Exception ex)
+                {
+                    GameLog.Recovered(ex, Stage, "The object was left out of the level.", childNode);
+                    continue;
+                }
                 _objects.Add(objectRunner);
 
                 if (!_containers.TryGetValue(objectRunner.Factor, out var visualContainer))

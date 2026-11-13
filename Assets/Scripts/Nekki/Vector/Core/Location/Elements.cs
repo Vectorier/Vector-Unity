@@ -56,20 +56,62 @@ namespace Nekki.Vector.Core.Location
             uint num = 0;
             foreach (XmlNode node in mainNode.ChildNodes)
             {
+                // An element that cannot be read is left out (logged with where it is); the others load.
+                Runner runner = null;
+                try
+                {
+                    if (!ParseChild(node, choices, ref num, out runner))
+                        continue;
+                }
+                catch (System.Exception ex)
+                {
+                    GameDiagnostics.GameLog.Recovered(ex, "Loading the level", $"The <{node.Name}> element was left out.", node);
+                    if (runner != null)
+                        Remove(runner);
+                }
+            }
+            AssignParent();
+            return num;
+        }
+
+        /// <summary>Removes a runner that failed while it was being made from every list it was added to.</summary>
+        private void Remove(Runner runner)
+        {
+            Runners.Remove(runner);
+            Visuals.Remove(runner as VisualRunner);
+            Platforms.Remove(runner as PlatformRunner);
+            Triggers.Remove(runner as TriggerRunner);
+            Areas.Remove(runner as AreaRunner);
+            Animations.Remove(runner as AnimationRunner);
+            Particles.Remove(runner as ParticleRunner);
+            Trapezoids.Remove(runner as TrapezoidRunner);
+            Items.Remove(runner as ItemRunner);
+            Spawns.Remove(runner as SpawnRunner);
+            Cameras.Remove(runner as CameraRunner);
+            Primitives.Remove(runner as PrimitiveRunner);
+            _parent.LayerOrder.Remove(runner);
+            if (runner.UnityObject != null)
+                Object.Destroy(runner.UnityObject);
+        }
+
+        /// <summary>One child element; false when it is not part of this play (another choice's variant).</summary>
+        private bool ParseChild(XmlNode node, Dictionary<string, string> choices, ref uint num, out Runner runner)
+        {
+            runner = null;
+            {
                 var selection = node["Properties"]?["Static"]?["Selection"];
                 if (selection != null &&
                     (!choices.TryGetValue(selection.Attributes["Choice"].Value, out var variant) ||
                      variant != selection.Attributes["Variant"].Value))
                 {
-                    continue;
+                    return false;
                 }
 
-                Runner runner = null;
                 switch (node.Name)
                 {
                     case "Object":
                         num += _parent.CreateChild(node, (num + Index) - 1, choices);
-                        continue;
+                        return true;
                     case "Image":
                         runner = Add(Visuals, CreateVisual(node));
                         if (runner != null) num++;
@@ -118,8 +160,7 @@ namespace Nekki.Vector.Core.Location
                     runner.Index = num + Index;
                 }
             }
-            AssignParent();
-            return num;
+            return true;
         }
 
         /// <summary>Moves every runner of <paramref name="element"/> into this one (an object's external definition).</summary>

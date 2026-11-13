@@ -26,7 +26,7 @@ namespace Nekki.Vector.Core.Trigger.Actions
                 _ValueVar = _ParentLoop.GetParentVar(value2);
                 if (_ValueVar == null)
                 {
-                    ErrorDialog.Report("Error create Action SetVariable not found" + value2, true);
+                    GameDiagnostics.GameLog.Warning("Loading the level's triggers", $"AppendValue: the variable \"{value2}\" does not exist.", "The action has no value to append.", node: p_node, attribute: "Value");
                 }
             }
             else

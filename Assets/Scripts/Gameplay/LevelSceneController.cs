@@ -1,3 +1,4 @@
+using Nekki.Vector.Core;
 using Nekki.Vector.Core.Controllers;
 using Nekki.Vector.Core.Location;
 using Nekki.Vector.Core.Trigger.Actions;
@@ -84,15 +85,47 @@ public class LevelSceneController : MonoBehaviour
         _canRender = false;
 
         RunnerRender.Reset();
-        LevelMainController.current?.ClearScene();
+        try
+        {
+            LevelMainController.current?.ClearScene();
+        }
+        catch (System.Exception ex)
+        {
+            GameDiagnostics.GameLog.Recovered(ex, "Leaving the level", "Some of the level may not have been cleared.");
+        }
         LevelMainController.Clear();
     }
 
+    /// <summary>The last level could not be loaded (LoadingScreen goes back to the menu instead of starting it).</summary>
+    public static bool LoadFailed { get; private set; }
+
     private void Load()
     {
-        LevelMainController.Init(this);
-        _botIcon.Init(LevelMainController.current.Location.GetAllBotModels());
-        _canRender = true;
+        LoadFailed = false;
+        try
+        {
+            LevelMainController.Init(this);
+            _botIcon.Init(LevelMainController.current.Location.GetAllBotModels());
+            _canRender = true;
+        }
+        catch (System.Exception ex)
+        {
+            // The level is not started: what was built of it is let go, the error is shown, and the player goes
+            // back to the menu (LoadingScreen) instead of a frozen or broken level.
+            LoadFailed = true;
+            _canRender = false;
+            GameDiagnostics.GameLog.Error(ex, $"Loading the level \"{CurrentTrackInfo.Current.LocationFile}\"",
+                "The level could not be started; the game went back to the menu.");
+            try
+            {
+                LevelMainController.current?.ClearScene();
+            }
+            catch (System.Exception clearError)
+            {
+                Debug.LogWarning("The level could not be cleared: " + clearError.Message);
+            }
+            LevelMainController.Clear();
+        }
     }
 
     private void OnUp(InputAction.CallbackContext _) => HandleNewInput(Key.Up);

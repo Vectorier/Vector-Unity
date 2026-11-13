@@ -120,7 +120,34 @@ namespace Nekki.Vector.Core.Location
             }
 
             string name = mainNode.Attributes["Name"].ParseString(string.Empty);
-            XmlNode data = string.IsNullOrEmpty(name) ? null : Sets.ObjectNode(name);
+            XmlNode data = null;
+            if (!string.IsNullOrEmpty(name))
+            {
+                // An object placed inside itself (directly or deeper) would nest until the game runs out of stack:
+                // its definition is not followed again.
+                bool nested = false;
+                for (var p = this; p != null; p = p._parent)
+                {
+                    if (p._name == name)
+                    {
+                        nested = true;
+                        break;
+                    }
+                }
+                if (nested)
+                {
+                    GameDiagnostics.GameLog.Warning("Loading the level", $"The object \"{name}\" contains itself.",
+                        "The inner copy was skipped.", node: mainNode, attribute: "Name");
+                }
+                else
+                {
+                    data = Sets.ObjectNode(name);
+                    // Named without content of its own: a reference to an object that is not there.
+                    if (data == null && mainNode["Content"] == null)
+                        GameDiagnostics.GameLog.Warning("Loading the level",
+                            $"The object \"{name}\" is not defined in the level or in its object sets.", "It was left out.", node: mainNode, attribute: "Name");
+                }
+            }
 
             var child = new ObjectRunner(index, this);
             uint num = child.Parse(mainNode, data, choices);

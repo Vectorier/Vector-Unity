@@ -59,11 +59,15 @@ namespace Nekki.Vector.Core.Trigger
                     ParseEvent(TemplateModule.getTemplateEventsXml(value));
                     continue;
                 }
-                TriggerEvent triggerRunnerEvent = TriggerEvent.Create(childNode, this);
-                if (triggerRunnerEvent != null)
+                try
                 {
-                    _Events.Add(triggerRunnerEvent);
+                    TriggerEvent triggerRunnerEvent = TriggerEvent.Create(childNode, this);
+                    if (triggerRunnerEvent != null)
+                    {
+                        _Events.Add(triggerRunnerEvent);
+                    }
                 }
+                catch (System.Exception ex) when (GameDiagnostics.XmlSource.Note(ex, childNode)) { throw; }
             }
         }
 

@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Xml;
+using GameDiagnostics;
 using UnityEngine;
 
 public static class XmlUtils
@@ -66,73 +67,81 @@ public static class XmlUtils
         return attr.Value;
     }
 
+    /// <summary>
+    /// The file's XML, or null when it is missing or is not valid XML: the game goes on without it and the problem
+    /// is logged with the file, line and column (<paramref name="dialog"/> false: a missing file is not logged,
+    /// the caller expects it may not be there).
+    /// </summary>
     public static XmlDocument OpenXMLDocument(string path, string file = "", OpenXmlType openType = OpenXmlType.Normal, bool pIgnoreComments = true, bool dialog = true)
-    {
-        string fullPath = Path.Combine(path, file);
-        var xmlReaderSettings = new XmlReaderSettings();
-        xmlReaderSettings.IgnoreComments = pIgnoreComments;
-        XmlDocument document = null;
-        switch (openType)
-        {
-            case OpenXmlType.Normal:
-                if (path.StartsWith(Application.streamingAssetsPath))
-                {
-                    if (!File.Exists(fullPath))
-                    {
-                        if (dialog)
-                            ErrorDialog.Report("FILE DOESNT EXIST: " + fullPath, true, true);
-
-                        return null;
-                    }
-                    var text0 = File.ReadAllText(fullPath);
-                    document = OpenXMLDocFromString(text0, xmlReaderSettings);
-                    break;
-                }
-                var text = ResourceManager.GetTextFromResources(fullPath);
-                document = OpenXMLDocFromString(text, xmlReaderSettings);
-                break;
-            case OpenXmlType.ForcedResourced:
-                var text1 = ResourceManager.GetTextFromResources(fullPath);
-                document = OpenXMLDocFromString(text1, xmlReaderSettings);
-                break;
-            case OpenXmlType.ForcedExternal:
-                var text2 = File.ReadAllText(fullPath);
-                document = OpenXMLDocFromString(text2, xmlReaderSettings);
-                break;
-            default:
-                var input = File.Open(fullPath, FileMode.Open);
-                var reader = XmlReader.Create(input);
-                document = OpenXMLDocument(reader);
-                break;
-        }
-        return document;
-    }
-
-    private static XmlDocument OpenXMLDocFromString(string pData, XmlReaderSettings pSettings)
-    {
-        using (XmlReader p_reader = XmlReader.Create(new StringReader(pData), pSettings))
-        {
-            XmlDocument xmlDocument = OpenXMLDocument(p_reader);
-            if (xmlDocument == null)
-            {
-                ErrorDialog.Report("Error read XML", true);
-            }
-            return xmlDocument;
-        }
-    }
-
-    private static XmlDocument OpenXMLDocument(XmlReader pReader)
     {
         try
         {
-            XmlDocument xmlDocument = new XmlDocument();
-            xmlDocument.Load(pReader);
-            return xmlDocument;
+            return ReadXmlDocument(path, file, openType, pIgnoreComments);
         }
-        catch
+        catch (GameDataException ex)
         {
+            if (dialog || ex.Line > 0)
+                GameLog.Add(GameErrorReport.From(ex, "Reading XML", GameErrorSeverity.Warning, "The file was not used."));
             return null;
         }
     }
 
+    /// <summary>
+    /// The file's XML. A <see cref="GameDataException"/> when the file does not exist or is not valid XML, naming
+    /// the file and the line and column where the XML breaks.
+    /// </summary>
+    public static XmlDocument ReadXmlDocument(string path, string file = "", OpenXmlType openType = OpenXmlType.Normal, bool pIgnoreComments = true)
+    {
+        string fullPath = Path.Combine(path, file);
+        string text;
+        try
+        {
+            switch (openType)
+            {
+                case OpenXmlType.Normal:
+                    if (path.StartsWith(Application.streamingAssetsPath))
+                    {
+                        if (!File.Exists(fullPath))
+                            throw new GameDataException("The file does not exist.", fullPath);
+                        text = File.ReadAllText(fullPath);
+                    }
+                    else
+                    {
+                        text = ResourceManager.GetTextFromResources(fullPath);
+                    }
+                    break;
+                case OpenXmlType.ForcedResourced:
+                    text = ResourceManager.GetTextFromResources(fullPath);
+                    break;
+                default:
+                    if (!File.Exists(fullPath))
+                        throw new GameDataException("The file does not exist.", fullPath);
+                    text = File.ReadAllText(fullPath);
+                    break;
+            }
+        }
+        catch (IOException ex)
+        {
+            throw new GameDataException("The file could not be read: " + ex.Message, fullPath, inner: ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            throw new GameDataException("The file could not be read: " + ex.Message, fullPath, inner: ex);
+        }
+        if (string.IsNullOrEmpty(text))
+            throw new GameDataException("The file does not exist.", fullPath);
+
+        var document = new XmlDocument();
+        try
+        {
+            using (XmlReader reader = XmlReader.Create(new StringReader(text), new XmlReaderSettings { IgnoreComments = pIgnoreComments }))
+                document.Load(reader);
+        }
+        catch (XmlException ex)
+        {
+            throw new GameDataException("The file is not valid XML: " + ex.Message, fullPath, line: ex.LineNumber, column: ex.LinePosition, inner: ex);
+        }
+        XmlSource.Register(document, fullPath, text);
+        return document;
+    }
 }

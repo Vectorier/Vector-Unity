@@ -89,6 +89,16 @@ namespace Nekki.Vector.Core.Location
 
         public void Init()
         {
+            // An error names this trigger (and its line); Sets turns the trigger off when it cannot start.
+            try
+            {
+                InitCore();
+            }
+            catch (System.Exception ex) when (GameDiagnostics.XmlSource.Note(ex, _rawNode)) { throw; }
+        }
+
+        private void InitCore()
+        {
             parseVariable(_xmlNode["Init"]);
             SetTriggerCollisionType();
             XmlNode xmlNode = _xmlNode["Template"];
@@ -234,24 +244,48 @@ namespace Nekki.Vector.Core.Location
             {
                 if (string.Equals(childNode.LocalName, "Loop"))
                 {
-                    TriggerLoop triggerRunnerLoop;
-                    if (childNode.Attributes["Template"] != null)
+                    // A loop that cannot be read (an unknown action, a broken condition...) is left out whole, so
+                    // it never runs half-understood; the trigger's other loops work.
+                    try
                     {
-                        string value = childNode.Attributes["Template"].Value;
-                        XmlNode templateLoopXML = TemplateModule.getTemplateLoopXML(value);
-                        triggerRunnerLoop = TriggerLoop.createLoop(templateLoopXML, this);
-                        _loops.Add(triggerRunnerLoop);
+                        TriggerLoop triggerRunnerLoop;
+                        if (childNode.Attributes["Template"] != null)
+                        {
+                            string value = childNode.Attributes["Template"].Value;
+                            XmlNode templateLoopXML = TemplateModule.getTemplateLoopXML(value);
+                            triggerRunnerLoop = TriggerLoop.createLoop(templateLoopXML, this);
+                            _loops.Add(triggerRunnerLoop);
+                        }
+                        else
+                        {
+                            triggerRunnerLoop = TriggerLoop.createLoop(childNode, this);
+                            _loops.Add(triggerRunnerLoop);
+                        }
                     }
-                    else
+                    catch (System.Exception ex)
                     {
-                        triggerRunnerLoop = TriggerLoop.createLoop(childNode, this);
-                        _loops.Add(triggerRunnerLoop);
+                        GameDiagnostics.GameLog.Recovered(ex, "Loading the level's triggers",
+                            $"This loop of the trigger \"{Name}\" was left out; its other loops work.", childNode);
                     }
                 }
             }
         }
 
         public void CheckEvent(TriggerEvent p_event, ModelHuman p_model)
+        {
+            // An error while the trigger reacts is logged (once, then counted) and the game goes on.
+            try
+            {
+                CheckEventCore(p_event, p_model);
+            }
+            catch (System.Exception ex)
+            {
+                GameDiagnostics.GameLog.Recovered(ex, "Running the level's triggers",
+                    $"The trigger \"{Name}\" skipped this event; the level goes on.", _rawNode);
+            }
+        }
+
+        private void CheckEventCore(TriggerEvent p_event, ModelHuman p_model)
         {
             if (!IsEnabled || (!IsActive && !p_event.IsTimeOutOrActivate()) || (p_model != null && p_model.IsPhysics && !p_event.IsCollision()))
             {
@@ -340,7 +374,7 @@ namespace Nekki.Vector.Core.Location
         {
             if (!vars.ContainsKey(p_key))
             {
-                ErrorDialog.Report("No Var Name = " + p_key + " in trigger " + Name, true);
+                GameDiagnostics.GameLog.Warning("Running the level's triggers", $"The trigger \"{Name}\" uses the variable \"{p_key}\", which it does not define.", "The variable reads as missing.", node: _rawNode);
                 return null;
             }
             return vars[p_key];

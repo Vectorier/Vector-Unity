@@ -139,11 +139,15 @@ namespace Nekki.Vector.Core.Trigger
                     }
                 }
                 Dictionary<string, string> dictionary2 = newNamesVars;
-                TriggerCondition triggerRunnerCondition = CreateConditions(p_loop, childNode, dictionary);
-                if (triggerRunnerCondition != null)
+                try
                 {
-                    p_conditions.Add(triggerRunnerCondition);
+                    TriggerCondition triggerRunnerCondition = CreateConditions(p_loop, childNode, dictionary);
+                    if (triggerRunnerCondition != null)
+                    {
+                        p_conditions.Add(triggerRunnerCondition);
+                    }
                 }
+                catch (System.Exception ex) when (GameDiagnostics.XmlSource.Note(ex, childNode)) { throw; }
                 newNamesVars = dictionary2;
             }
         }
